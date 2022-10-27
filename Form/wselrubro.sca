@@ -1,0 +1,602 @@
+SCCTEXT Version 4.0.0.2
+PLATFORM C(8,0),UNIQUEID C(10,0),TIMESTAMP N(10,0),CLASS M(4,0),CLASSLOC M(4,0),BASECLASS M(4,0),OBJNAME M(4,0),PARENT M(4,0),PROPERTIES M(4,0),PROTECTED M(4,0),METHODS M(4,0),OBJCODE M(4,0),OLE M(4,0),OLE2 M(4,0),RESERVED1 M(4,0),RESERVED2 M(4,0),RESERVED3 M(4,0),RESERVED4 M(4,0),RESERVED5 M(4,0),RESERVED6 M(4,0),RESERVED7 M(4,0),RESERVED8 M(4,0),USER M(4,0)
+1252
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] Screen    
+[START RESERVED1]
+VERSION =   3.00[END RESERVED1]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0E
+[CLASS] dataenvironment
+[BASECLASS] dataenvironment
+[OBJNAME] Dataenvironment
+[START PROPERTIES]
+Top = 0
+Left = 0
+Width = 0
+Height = 0
+DataSource = .NULL.
+Name = "Dataenvironment"
+[END PROPERTIES]
+[START RESERVED2]
+1[END RESERVED2]
+[START RESERVED4]
+1[END RESERVED4]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0F
+[CLASS] form
+[BASECLASS] form
+[OBJNAME] Form1
+[START PROPERTIES]
+BorderStyle = 3
+Height = 392
+Width = 511
+ShowWindow = 1
+DoCreate = .T.
+ShowTips = .T.
+AutoCenter = .T.
+Caption = "Selección de Rubros"
+MaxButton = .F.
+MinButton = .F.
+Icon = ..\bmp\logoisstec.ico
+KeyPreview = .T.
+WindowType = 1
+Name = "Form1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Destroy
+SELECT RubCur
+COUNT ALL FOR RubCur.Sel .and. !DELETED() TO vRetornaSeleccion
+
+ENDPROC
+PROCEDURE Init
+IF !USED("RubCur") THEN
+	PUBLIC vOrdenRubrosActivo
+	vOrdenRubrosActivo="2"
+
+	CREATE CURSOR RubCur (Sel l(1), Codigo c(10), Detalle c(40))
+	INDEX on Sel TAG Sel
+	INDEX on Codigo TAG Codigo
+	INDEX on Detalle TAG Detalle
+	SET ORDER TO 2
+
+	SELECT Rubros
+	SCAN FOR !DELETED('Rubros')		
+		INSERT INTO RubCur VALUES (.f., Rubros.RuCodigo, Rubros.RuDescri)
+		
+		SELECT Rubros
+	ENDSCAN
+ENDIF
+
+TRY
+	vVariablePrueba=vOrdenRubrosActivo
+CATCH
+	PUBLIC vOrdenRubrosActivo
+	vOrdenRubrosActivo="2"
+ENDTRY
+
+SELECT RubCur
+IF vOrdenRubrosActivo="1" THEN
+	SET ORDER TO &vOrdenRubrosActivo DESCENDING
+ELSE
+	SET ORDER TO &vOrdenRubrosActivo
+ENDIF
+COUNT ALL TO Thisform.Text1.Value FOR RubCur.Sel
+GO TOP
+
+WITH Thisform.Grid1
+	.RecordSource="RubCur"
+	FOR vFilas=1 TO .ColumnCount
+		.Columns(vFilas).ControlSource=FIELD(vFilas)
+		*.Columns(vFilas).DynamicForeColor="IIF(ALLTRIM(RubCur.Movil)='Movil',RGB(0,128,0), RGB(0,0,0))"
+		.Columns(vFilas).DynamicBackColor="IIF(RubCur.Sel,RGB(183,255,255), RGB(255,255,255))"
+		DO CASE
+			CASE vFilas=1
+				.Columns(vFilas).Width=24
+			CASE vFilas=2
+				.Columns(vFilas).Width=70
+			CASE vFilas=3
+				.Columns(vFilas).Width=320
+			*CASE vFilas=4
+				*.Columns(vFilas).Width=75
+			*CASE vFilas=5
+				*.Columns(vFilas).Width=37
+		ENDCASE
+	ENDFOR
+ENDWITH 			
+
+WITH Thisform.Busqueda
+	.BaseSelec="RubCur"
+	.IniCampo=2
+	.NumeroCampos=3
+*	.Anteriorbusqueda=""
+ENDWITH
+ENDPROC
+PROCEDURE KeyPress
+LPARAMETERS nKeyCode, nShiftAltCtrl
+IF nKeyCode=27 THEN
+	Thisform.Release
+ENDIF
+
+IF nKeyCode=-5 THEN
+	Thisform.Image1.Click()
+ENDIF
+IF nKeyCode=-6 THEN
+	Thisform.Image2.Click()
+ENDIF
+
+IF nKeyCode=70 then
+	Thisform.Busqueda.pBusqueda(1)
+	Thisform.Grid1.SetFocus
+ENDIF
+
+IF nKeyCode=71 then
+	Thisform.Busqueda.pBusqueda(2)
+	Thisform.Grid1.SetFocus
+ENDIF
+
+IF nKeyCode=1 THEN
+	SELECT RubCur
+	GO Top
+	Thisform.Grid1.SetFocus
+ENDIF
+
+IF nKeyCode=6 THEN
+	SELECT RubCur
+	GO BOTTOM
+	Thisform.Grid1.SetFocus
+ENDIF
+
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0G
+[CLASS] grid
+[BASECLASS] grid
+[OBJNAME] Grid1
+[PARENT] Form1
+[START PROPERTIES]
+ColumnCount = 3
+FontSize = 8
+DeleteMark = .F.
+Height = 336
+Left = 12
+Panel = 1
+ReadOnly = .T.
+RecordSource = ""
+RowHeight = 17
+Top = 12
+Width = 452
+GridLineColor = 224,224,224
+AllowCellSelection = .F.
+Name = "Grid1"
+Column1.FontSize = 8
+Column1.ControlSource = ""
+Column1.CurrentControl = "Check1"
+Column1.Width = 24
+Column1.ReadOnly = .T.
+Column1.Sparse = .F.
+Column1.BackColor = 255,255,255
+Column1.Name = "Column1"
+Column2.FontSize = 8
+Column2.ControlSource = ""
+Column2.Width = 97
+Column2.ReadOnly = .T.
+Column2.BackColor = 255,255,255
+Column2.Name = "Column2"
+Column3.FontSize = 8
+Column3.ControlSource = ""
+Column3.Width = 296
+Column3.ReadOnly = .T.
+Column3.BackColor = 255,255,255
+Column3.Name = "Column3"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+SELECT RUBCUR
+REPLACE RUBCUR.SEL WITH !RUBCUR.SEL
+
+IF RUBCUR.SEL THEN
+	THISFORM.TEXT1.VALUE=THISFORM.TEXT1.VALUE+1
+ELSE
+	THISFORM.TEXT1.VALUE=THISFORM.TEXT1.VALUE-1
+ENDIF
+
+THISFORM.GRID1.REFRESH
+
+ENDPROC
+PROCEDURE KeyPress
+LPARAMETERS nKeyCode, nShiftAltCtrl
+IF nKeyCode=32 THEN
+	SELECT RubCur
+	Replace RubCur.Sel WITH !RubCur.Sel
+	
+	IF RubCur.Sel THEN
+		Thisform.Text1.Value=Thisform.Text1.Value+1
+	ELSE
+		Thisform.Text1.Value=Thisform.Text1.Value-1
+	ENDIF
+	
+	Thisform.Grid1.Refresh
+ENDIF
+
+IF nKeyCode=1 THEN
+	SELECT RubCur
+	GO TOP
+	Thisform.Grid1.Refresh
+ENDIF
+IF nKeyCode=6 THEN
+	SELECT RubCur
+	GO BOTTOM
+	Thisform.Grid1.Refresh	
+ENDIF
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0H
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column1
+[START PROPERTIES]
+FontSize = 8
+Caption = ""
+Name = "Header1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE DblClick
+vOrdenRubrosActivo="1"
+SELECT RubCur
+SET ORDER TO &vOrdenRubrosActivo DESCENDING
+GO TOP
+Thisform.Grid1.Refresh
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0I
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column1
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Margin = 0
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0J
+[CLASS] checkbox
+[BASECLASS] checkbox
+[OBJNAME] Check1
+[PARENT] Form1.Grid1.Column1
+[START PROPERTIES]
+Top = 59
+Left = 13
+Height = 17
+Width = 60
+AutoSize = .T.
+Alignment = 0
+BackStyle = 0
+Caption = ""
+BackColor = 255,255,255
+ReadOnly = .T.
+Name = "Check1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0K
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column2
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Código"
+Name = "Header1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE DblClick
+vOrdenRubrosActivo="2"
+SELECT RubCur
+SET ORDER TO &vOrdenRubrosActivo
+GO TOP
+Thisform.Grid1.Refresh
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0L
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column2
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Margin = 0
+ReadOnly = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0M
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column3
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Detalle"
+Name = "Header1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE DblClick
+vOrdenRubrosActivo="3"
+SELECT RubCur
+SET ORDER TO &vOrdenRubrosActivo
+GO TOP
+Thisform.Grid1.Refresh
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0N
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column3
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Margin = 0
+ReadOnly = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB13WCBJ
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label1
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+BackStyle = 0
+Caption = "Marcados"
+Height = 17
+Left = 13
+Top = 354
+Width = 56
+Name = "Label1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB13WCBK
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1
+[START PROPERTIES]
+FontSize = 8
+Alignment = 3
+Value = 0
+Enabled = .F.
+Height = 23
+Left = 71
+Top = 350
+Width = 40
+DisabledForeColor = 1,0,0
+Themes = .F.
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SJ0QNPZ9
+[CLASS] commandbutton
+[BASECLASS] commandbutton
+[OBJNAME] Command4
+[PARENT] Form1
+[START PROPERTIES]
+Top = 13
+Left = 465
+Height = 24
+Width = 22
+Caption = ""
+TabIndex = 13
+Name = "Command4"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+Thisform.Image1.Click()
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SJ0QNPZA
+[CLASS] image
+[BASECLASS] image
+[OBJNAME] Image1
+[PARENT] Form1
+[START PROPERTIES]
+Picture = ..\bmp\check-box.png
+Stretch = 2
+BackStyle = 0
+Height = 25
+Left = 467
+Top = 11
+Width = 24
+ToolTipText = "F6 = [MarcarTodos]"
+Name = "Image1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+SELECT RubCur
+Replace ALL RubCur.Sel WITH .t.
+COUNT ALL FOR RubCur.Sel TO Thisform.Text1.Value
+GO TOP
+Thisform.Grid1.Refresh
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SJ0QNPZB
+[CLASS] commandbutton
+[BASECLASS] commandbutton
+[OBJNAME] Command5
+[PARENT] Form1
+[START PROPERTIES]
+Top = 38
+Left = 465
+Height = 24
+Width = 22
+Caption = ""
+TabIndex = 14
+Name = "Command5"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+Thisform.Image2.Click()
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SJ0QNPZC
+[CLASS] image
+[BASECLASS] image
+[OBJNAME] Image2
+[PARENT] Form1
+[START PROPERTIES]
+Picture = ..\bmp\checkbox_unchecked.png
+Stretch = 2
+BackStyle = 0
+Height = 19
+Left = 468
+Top = 40
+Width = 17
+ToolTipText = "F7 = [DesMarcarTodos]"
+Name = "Image2"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+SELECT RubCur
+Replace ALL RubCur.Sel WITH .f.
+Thisform.Text1.Value=0
+GO TOP
+Thisform.Grid1.Refresh
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3SB11OM0E
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label2
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+FontItalic = .T.
+FontSize = 8
+FontUnderline = .T.
+BackStyle = 0
+Caption = "Marcar = Barra Espaciadora "
+Height = 16
+Left = 121
+Top = 353
+Width = 144
+Name = "Label2"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3U20WA0AP
+[CLASS] busqueda
+[CLASSLOC] ..\clases\utiles.vcx
+[BASECLASS] commandbutton
+[OBJNAME] Busqueda
+[PARENT] Form1
+[START PROPERTIES]
+Top = 318
+Left = 465
+Height = 30
+Width = 28
+Picture = ..\bmp\find.bmp
+Name = "Busqueda"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+Thisform.Busqueda.pBusqueda(1)
+Thisform.Grid1.SetFocus
+ENDPROC
+PROCEDURE KeyPress
+LPARAMETERS nKeyCode, nShiftAltCtrl
+
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _4MY0MQG1J
+[CLASS] commandbutton
+[BASECLASS] commandbutton
+[OBJNAME] Command1
+[PARENT] Form1
+[START PROPERTIES]
+Top = 353
+Left = 381
+Height = 20
+Width = 84
+FontBold = .T.
+FontSize = 9
+Caption = "Salir"
+Name = "Command1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+THISFORM.RELEASE
+
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[START PROPERTIES]
+Arial, 0, 9, 5, 15, 12, 32, 3, 0
+Arial, 0, 8, 5, 14, 11, 29, 3, 0
+Arial, 1, 9, 6, 15, 12, 32, 3, 0
+[END PROPERTIES]
+[EOF]

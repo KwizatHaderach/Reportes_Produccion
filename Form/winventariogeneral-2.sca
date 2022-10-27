@@ -1,0 +1,1091 @@
+SCCTEXT Version 4.0.0.2
+PLATFORM C(8,0),UNIQUEID C(10,0),TIMESTAMP N(10,0),CLASS M(4,0),CLASSLOC M(4,0),BASECLASS M(4,0),OBJNAME M(4,0),PARENT M(4,0),PROPERTIES M(4,0),PROTECTED M(4,0),METHODS M(4,0),OBJCODE M(4,0),OLE M(4,0),OLE2 M(4,0),RESERVED1 M(4,0),RESERVED2 M(4,0),RESERVED3 M(4,0),RESERVED4 M(4,0),RESERVED5 M(4,0),RESERVED6 M(4,0),RESERVED7 M(4,0),RESERVED8 M(4,0),USER M(4,0)
+1252
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] Screen    
+[START RESERVED1]
+VERSION =   3.00[END RESERVED1]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I510WKRI
+[CLASS] dataenvironment
+[BASECLASS] dataenvironment
+[OBJNAME] Dataenvironment
+[START PROPERTIES]
+Top = 220
+Left = 1
+Width = 520
+Height = 200
+DataSource = .NULL.
+Name = "Dataenvironment"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE BeforeOpenTables
+
+FOR vI=1 TO 52
+	vAreaTrabajo=ALLTRIM(STR(vI))
+	SELECT &vAreaTrabajo
+	USE
+ENDFOR
+
+***** Verificacion de Existencia de Tablas
+SET EXCLUSIVE OFF
+
+PUBLIC vBndContinuaCarga, vBndExistevia
+TRY
+	vExisteVia=StdVia
+	vBndExisteVia=.t.
+CATCH
+	IF MESSAGEBOX("Variable de Via no existe, usar Ruta alternativa ?",1+32+256,"Mensaje del sistema")=1 then
+		PUBLIC StdVia, StdviaLoc
+		StdVia="\\Srv_Desarrollo\Ambientes\Ernesto\Ditron\Ditron_Ligua\Datos\"
+		StdviaLoc="g:\Desarrollo\IsstecErp\"
+		vBndExisteVia=.t.
+	ELSE
+		vBndExisteVia=.f.
+		=MESSAGEBOX("La Ruta de los datos no esta disponible, proceso detenido")
+	ENDIF
+ENDTRY
+
+IF vBndExisteVia then
+	PUBLIC ARRAY aTablas (4,2)
+
+	aTablas[1,1]=StdVia+"Producto.DBF"
+	aTablas[2,1]=StdVia+"FaProduc.DBF"
+	aTablas[3,1]=StdVia+"RuProduc.DBF"
+	aTablas[4,1]=StdVia+"Bodegas.DBF"
+
+	aTablas[1,2]="Producto"
+	aTablas[2,2]="faProduc"
+	aTablas[3,2]="RuProduc"
+	aTablas[4,2]="Bodegas"
+	
+	
+	FOR vI=1 TO ALEN(aTablas,1)
+		IF EMPTY(aTablas[vI,1]) then
+			LOOP
+		ENDIF
+		IF !FILE(aTablas[vI,1]) then
+			=MESSAGEBOX("La Tabla "+ALLTRIM(aTablas[vI,1])+" no se encuentra en el ERP, el proceso no puede incializarse")
+			RETURN .f.
+		ENDIF
+		SELECT 0
+
+		vTablaSelec=UPPER(ALLTRIM(aTablas[vI,1]))
+		vAlias=UPPER(ALLTRIM(aTablas[vI,2]))
+		vAreaTrabajo=ALLTRIM(STR(10+vI))
+		IF !FILE(vTablaSelec) THEN
+			WAIT WINDOW "No existe Tabla "+vtablaSelec
+		ENDIF
+		
+		TRY 			
+			USE &vTablaSelec ALIAS &vAlias IN &vAreaTrabajo SHARED
+			vBndContinuaCarga=.t.
+		CATCH
+			=MESSAGEBOX("Alguna de las tablas iniciales del proceso esta ocupada en exclusiva o no existe"+CHR(13)+;
+						"Tabla con Error : "+ALLTRIM(vTablaSelec)+CHR(13)+;
+						"Proceso Detenido")
+			vBndContinuaCarga=.f.
+			FINALLY
+		ENDTRY
+	ENDFOR
+ELSE
+	vBndContinuaCarga=.f.
+ENDIF
+
+ENDPROC
+[END METHODS]
+[START RESERVED2]
+1[END RESERVED2]
+[START RESERVED4]
+1[END RESERVED4]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I510WKRJ
+[CLASS] form
+[BASECLASS] form
+[OBJNAME] Form1
+[START PROPERTIES]
+Height = 370
+Width = 420
+ShowWindow = 1
+DoCreate = .T.
+ShowTips = .T.
+AutoCenter = .T.
+Caption = "Parametros: Inventario General"
+MaxButton = .F.
+MinButton = .F.
+Icon = ..\bmp\logoisstec.ico
+KeyPreview = .T.
+WindowType = 1
+Name = "Form1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Destroy
+
+FOR vI=1 TO 32
+	vAreaTrabajo=ALLTRIM(STR(vI))
+	SELECT &vAreaTrabajo
+	USE
+ENDFOR
+ENDPROC
+PROCEDURE Error
+LPARAMETERS nError, cMethod, nLine
+
+ENDPROC
+PROCEDURE Init
+IF !vBndContinuaCarga THEN
+	RETURN .f.
+ENDIF
+
+Thisform.Facturador1.mSetPropiedades()
+
+ENDPROC
+PROCEDURE KeyPress
+LPARAMETERS nKeyCode, nShiftAltCtrl
+IF nKeyCode=27 THEN
+	Thisform.Release
+ENDIF
+
+*!*	IF nKeyCode=70 THEN
+*!*		Thisform.Command2.Click()
+*!*	ENDIF
+
+*!*	IF nKeyCode=71 then
+*!*		DO CASE
+*!*			CASE Thisform.OptionGroup1.Value=1
+*!*				SELECT ProdCur				
+*!*			CASE Thisform.OptionGroup1.Value=2
+*!*				SELECT FamCur
+*!*			CASE Thisform.OptionGroup1.Value=3
+*!*				SELECT RubroCur
+*!*		ENDCASE 			
+*!*		gPuntero=RECCOUNT()
+*!*		
+*!*		IF !EMPTY(ALLTRIM(vAnteriorBusqueda)) THEN
+*!*			CONTINUE
+*!*		ENDIF
+
+*!*		IF !FOUND() then
+*!*			=MESSAGEBOX("No se encontro ninguna coincidencia")
+*!*			DO CASE
+*!*				CASE Thisform.OptionGroup1.Value=1
+*!*					SELECT ProdCur				
+*!*				CASE Thisform.OptionGroup1.Value=2
+*!*					SELECT FamCur
+*!*				CASE Thisform.OptionGroup1.Value=3
+*!*					SELECT RubroCur
+*!*			ENDCASE 					
+*!*			GO Bott
+*!*		ENDIF
+
+*!*		Thisform.Grid1.SetFocus
+*!*	ENDIF
+
+*!*	IF nKeyCode=-5 THEN
+*!*		Thisform.Image3.Click()
+*!*	ENDIF
+
+*!*	IF nKeyCode=-6 THEN
+*!*		Thisform.Image2.Click()
+*!*	ENDIF
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _4YX0LY24D
+[CLASS] shape
+[BASECLASS] shape
+[OBJNAME] Shape1
+[PARENT] Form1
+[START PROPERTIES]
+Top = 73
+Left = 28
+Height = 82
+Width = 333
+Name = "Shape1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I510WKRI
+[CLASS] optiongroup
+[BASECLASS] optiongroup
+[OBJNAME] Optiongroup1
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+ButtonCount = 2
+Value = 1
+Height = 27
+Left = 164
+Top = 171
+Width = 128
+TabIndex = 3
+Themes = .F.
+Name = "Optiongroup1"
+Option1.FontSize = 8
+Option1.BackStyle = 0
+Option1.Caption = "\<Familias"
+Option1.Value = 1
+Option1.Enabled = .F.
+Option1.Height = 17
+Option1.Left = 5
+Option1.Style = 0
+Option1.Top = 5
+Option1.Width = 56
+Option1.AutoSize = .F.
+Option1.Name = "Option1"
+Option2.FontSize = 8
+Option2.BackStyle = 0
+Option2.Caption = "\<Rubros"
+Option2.Enabled = .F.
+Option2.Height = 17
+Option2.Left = 67
+Option2.Style = 0
+Option2.Top = 5
+Option2.Width = 56
+Option2.AutoSize = .F.
+Option2.Name = "Option2"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE ProgrammaticChange
+
+
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I510WKRI
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label1
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+BackStyle = 0
+Caption = "Fecha :"
+Height = 17
+Left = 30
+Top = 26
+Width = 42
+TabIndex = 8
+Name = "Label1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I510WKRL
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1
+[START PROPERTIES]
+FontBold = .T.
+Height = 23
+Left = 78
+SelectOnEntry = .T.
+TabIndex = 1
+Top = 24
+Width = 86
+SelectedBackColor = 255,0,0
+Name = "Text1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Init
+This.Value=DATE()
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I511QINC
+[CLASS] combobox
+[BASECLASS] combobox
+[OBJNAME] Combo1
+[PARENT] Form1
+[START PROPERTIES]
+FontBold = .T.
+RowSourceType = 5
+Value = 0
+Enabled = .F.
+Height = 24
+Left = 164
+SelectOnEntry = .F.
+Style = 2
+TabIndex = 6
+Top = 203
+Width = 207
+DisabledForeColor = 1,0,0
+SelectedBackColor = 255,0,0
+SelectedItemBackColor = 255,0,0
+Name = "Combo1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Destroy
+RELEASE aBodegas
+
+ENDPROC
+PROCEDURE Init
+LOCAL vLimiteArreglo
+
+This.RowSource=""
+
+RELEASE aBodegas
+
+PUBLIC ARRAY aBodegas (1,2)
+
+SELECT "["+Codigo+"]-"+ALLTRIM(Descri), Codigo ;
+	FROM Bodegas ;
+	ORDER BY Codigo ;
+	INTO ARRAY aBodegas
+
+IF _Tally>0 THEN
+*!*		IF _Tally>1 THEN
+*!*			vLimiteArreglo=ALEN(aBodegas,1)
+
+*!*			PUBLIC ARRAY aBodegas(vLimiteArreglo+1,2)
+*!*			aBodegas[vLimiteArreglo+1,1]="TODAS"
+*!*			aBodegas[vLimiteArreglo+1,2]="999"
+*!*		ENDIF
+	
+	This.RowSource="aBODEGAS"
+*	This.Value=This.ListCount
+ENDIF
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I511QIND
+[CLASS] checkbox
+[BASECLASS] checkbox
+[OBJNAME] Check1
+[PARENT] Form1
+[START PROPERTIES]
+Top = 239
+Left = 30
+Height = 17
+Width = 94
+FontBold = .T.
+AutoSize = .T.
+Alignment = 0
+BackStyle = 0
+Caption = "Filtro x \<Saldo "
+Value = .F.
+TabIndex = 7
+Name = "Check1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE InteractiveChange
+Thisform.OptionGroup2.SetAll("ENABLED", This.Value, "OptionButton")
+ENDPROC
+PROCEDURE ProgrammaticChange
+This.InteractiveChange()
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60XLRCC
+[CLASS] movimprod
+[CLASSLOC] ..\clases\movimprod.vcx
+[BASECLASS] custom
+[OBJNAME] Movimprod
+[PARENT] Form1
+[START PROPERTIES]
+Top = 336
+Left = 54
+Height = 18
+Width = 17
+Name = "Movimprod"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I510WKRI
+[CLASS] optiongroup
+[BASECLASS] optiongroup
+[OBJNAME] Optiongroup2
+[PARENT] Form1
+[START PROPERTIES]
+ButtonCount = 3
+Value = 1
+Height = 65
+Left = 164
+Top = 236
+Width = 116
+TabIndex = 12
+Name = "Optiongroup2"
+Option1.FontSize = 8
+Option1.Caption = "Mayores  a 0"
+Option1.Value = 1
+Option1.Enabled = .F.
+Option1.Height = 17
+Option1.Left = 5
+Option1.Style = 0
+Option1.Top = 5
+Option1.Width = 86
+Option1.AutoSize = .F.
+Option1.Name = "Option1"
+Option2.FontSize = 8
+Option2.Caption = "Menores a 0"
+Option2.Enabled = .F.
+Option2.Height = 17
+Option2.Left = 5
+Option2.Style = 0
+Option2.Top = 24
+Option2.Width = 86
+Option2.AutoSize = .F.
+Option2.Name = "Option2"
+Option3.FontSize = 8
+Option3.Caption = "Igual        a 0"
+Option3.Enabled = .F.
+Option3.Height = 17
+Option3.Left = 5
+Option3.Style = 0
+Option3.Top = 43
+Option3.Width = 86
+Option3.AutoSize = .F.
+Option3.Name = "Option3"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3UN0YLB7X
+[CLASS] facturador
+[CLASSLOC] ..\clases\cfacturador.vcx
+[BASECLASS] custom
+[OBJNAME] Facturador1
+[PARENT] Form1
+[START PROPERTIES]
+Top = 336
+Left = 30
+Height = 15
+Width = 20
+Name = "Facturador1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I510WKRI
+[CLASS] commandbutton
+[BASECLASS] commandbutton
+[OBJNAME] Command2
+[PARENT] Form1
+[START PROPERTIES]
+Top = 86
+Left = 142
+Height = 25
+Width = 143
+FontShadow = .F.
+FontSize = 8
+Caption = "-  Seleccion  -"
+Enabled = .F.
+TabIndex = 4
+Name = "Command2"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+DO FORM g:\Desarrollo\IsstecErp\Form\wSelFamilias.scx TO Thisform.Text4.Value
+
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I510WKRJ
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text4
+[PARENT] Form1
+[START PROPERTIES]
+FontShadow = .F.
+FontSize = 8
+Alignment = 3
+Value = 0
+Enabled = .F.
+Format = "Z"
+Height = 24
+Left = 284
+TabIndex = 14
+Top = 88
+Width = 53
+DisabledForeColor = 1,0,0
+Name = "Text4"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _40L0Z23PM
+[CLASS] commandbutton
+[BASECLASS] commandbutton
+[OBJNAME] Command3
+[PARENT] Form1
+[START PROPERTIES]
+Top = 112
+Left = 142
+Height = 25
+Width = 143
+FontShadow = .F.
+FontSize = 8
+Caption = "-  Seleccion  -"
+Enabled = .F.
+TabIndex = 5
+Name = "Command3"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+DO FORM g:\Desarrollo\IsstecErp\Form\wSelRubro.scx TO Thisform.Text2.Value
+
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _40L0Z23PN
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text2
+[PARENT] Form1
+[START PROPERTIES]
+FontShadow = .F.
+FontSize = 8
+Alignment = 3
+Value = 0
+Enabled = .F.
+Format = "Z"
+Height = 24
+Left = 284
+TabIndex = 13
+Top = 112
+Width = 53
+DisabledForeColor = 1,0,0
+Name = "Text2"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _40L13C08Q
+[CLASS] commandbutton
+[BASECLASS] commandbutton
+[OBJNAME] Command4
+[PARENT] Form1
+[START PROPERTIES]
+Top = 312
+Left = 360
+Height = 39
+Width = 38
+Anchor = 8
+Picture = ..\bmp\executeicon-1.png
+Caption = ""
+TabIndex = 2
+Name = "Command4"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+*!*	IF !Thisform.Facturador1.mActivaTablas(.f., Thisform.Text1.Value,.t.,.t.,.t.,.t.,.t.,.t.) THEN
+*!*		=MESSAGEBOX("No existen datos para periodo seleccionado")
+*!*		RETURN .f.
+*!*	ENDIF
+
+*!*	vFechaProceso=thisform.Text1.Value
+*!*	vFiltro=""
+*!*	IF Thisform.Check1.Value THEN
+*!*		DO CASE
+*!*			CASE Thisform.OptionGroup2.Value=1
+*!*				vFiltro="MAYOR A 0"
+*!*			CASE Thisform.OptionGroup2.Value=2
+*!*				vFiltro="MENOR A 0"
+*!*			CASE Thisform.OptionGroup2.Value=3
+*!*				vFiltro="IGUAL A 0"
+*!*		ENDCASE
+*!*	ENDIF 		
+
+*!*	IF USED("InvCur") THEN
+*!*		USE IN InvCur
+*!*	ENDIF
+
+*!*	CREATE CURSOR InvCur (Codigo c(15), Detalle c(50), UniMed c(15), UnixEnv n(5), ;
+*!*						  Unidad n(15), Fraccion n(15), UnidadTMP n(10), FracccionTMP n(10),;
+*!*						  Prec1 n(15,2), Prec2 n(15,2), Prec3 n(15,2),Costo n(15,2),;
+*!*						  CodFam c(10), Rubro c(10),Estado c(1), OrdenFamilia c(15),;
+*!*						  OrdenRubro c(15),Tipo c(2))
+
+*!*	STORE .f. TO vFiltroFamilias, vFiltroRubros
+*!*	vBodegaFiltro=""
+
+*!*	vProductosDesactivados=Thisform.Check2.Value
+*!*	vFiltroBodegas=ALLTRIM(aBodegas(Thisform.Combo1.Value,2))!="999"
+
+*!*	IF vFiltroBodegas THEN
+*!*		vBodegaFiltro=aBodegas(Thisform.Combo1.Value,2)
+*!*	ENDIF
+
+*!*	DO CASE
+*!*		CASE Thisform.OptionGroup1.Value=2
+*!*			vFiltroFamilias=Thisform.Text4.Value>0	
+*!*		CASE Thisform.OptionGroup1.Value=3
+*!*			vFiltroRubros=Thisform.Text2.Value>0
+*!*	ENDCASE 	
+
+*!*	SET ENGINEBEHAVIOR 70
+*!*	vSentencia="SELECT prCodigo, prDescrip, prUniMed, UnixEnv, Prec1, Prec2, Prec3, preCom, prFamilia, Rubro, EdoPro ;
+*!*				FROM Producto ;
+*!*				WHERE IIF(!vProductosDesactivados, EdoPro='S', .t.) .and. !DELETED('PRODUCTO')  "
+*!*	vCondicionFamilia=IIF(vFiltroFamilias," .and. prFamilia in (SELECT FamCur.Codigo FROM FamCur WHERE FamCur.Sel)","")
+*!*	vCondicionRubro=IIF(vFiltroRubros," .and. Rubro in (SELECT Codigo FROM RubroCur WHERE RubroCur.Sel)","")
+*!*	vSentenciaFinal=" INTO CURSOR cProducto"
+
+*!*	vOrdenSQL=vSentencia+vCondicionFamilia+vCondicionRubro+vSentenciaFinal
+
+*!*	&vOrdenSQL
+
+*!*	GO TOP IN cProducto
+*!*	DO WHILE !EOF("cPRODUCTO")
+*!*	*!*		IF ALLTRIM(cProducto.prCodigo)="12019224" THEN
+*!*	*!*			SET STEP ON
+*!*	*!*		ENDIF
+*!*		
+*!*		STORE 0 TO vCantidadInicial, vCantidadInicialTMP, vFraccionInicial, vFraccionInicialTMP
+*!*		IF vFiltroBodegas THEN
+*!*			SELECT CodPro, SUM(Saldo) as Saldo, SUM(SaldoFra) as SaldoFra, SUM(SaldoFin) as SaldoFin, ;
+*!*				   SUM(SalFraFin) as SalFraFin, SUM(SaldoTMP) as SaldoTMP, ;
+*!*				   SUM(SalFraTmp) as SalFraTmp, SUM(SalFinTMP) as SalFinTmp, SUM(SalFraFinT) as SalFraFinT ;
+*!*				FROM tSaldos ;
+*!*				WHERE !DELETED("tSALDOS") .and. Bodega=vBodegaFiltro .and. CodPro=cProducto.prCodigo ;
+*!*				GROUP BY CodPro ;
+*!*				INTO CURSOR cSaldos
+*!*		ELSE
+*!*			SELECT CodPro, SUM(Saldo) as Saldo, SUM(SaldoFra) as SaldoFra, SUM(SaldoFin) as SaldoFin, ;
+*!*				   SUM(SalFraFin) as SalFraFin, SUM(SaldoTMP) as SaldoTMP, ;
+*!*				   SUM(SalFraTmp) as SalFraTmp, SUM(SalFinTMP) as SalFinTmp, SUM(SalFraFinT) as SalFraFinT ;
+*!*				FROM tSaldos ;
+*!*				WHERE !DELETED("tSALDOS") .and. CodPro=cProducto.prCodigo ;
+*!*				GROUP BY CodPro ;
+*!*				INTO CURSOR cSaldos
+*!*		ENDIF
+
+*!*		GO TOP IN cSaldos
+*!*		
+*!*		WITH Thisform.MovimProd
+*!*			.Unidades=0
+*!*			.Fracciones=(cSaldos.Saldo*cProducto.UnixEnv)+cSaldos.SaldoFra
+*!*			.UnixEnv=cProducto.UnixEnv
+*!*			
+*!*			.pcUniFra()
+*!*			
+*!*			vCantidadInicial=.Unidades
+*!*			vFraccionInicial=.Fracciones
+*!*		
+*!*			vCantidadInicialTMP=vCantidadInicial
+*!*			vFraccionInicialTmp=vFraccionInicial
+*!*		
+*!*			STORE 0 TO vCantidadSalida, vFraccionSalida, vCanTMP, vFraTMP, vCantidadEntrada, vFraccionEntrada
+*!*		ENDWITH
+
+*!*		STORE 0 TO vCantidad, vFraccion	
+*!*		IF vFiltroBodegas THEN
+*!*			SELECT CodPro, SUM(Entra) as Entra, SUM(Sale) as Sale, SUM(EntraFra) as EntraFra, SUM(SaleFra) as SaleFra ;
+*!*				FROM tMovim ;
+*!*				WHERE !DELETED("tMOVIM") .and. tMovim.Bodega=vBodegaFiltro .and. ;
+*!*					  tMovim.Fecha<=vFechaProceso .and. tMovim.CodPro=cProducto.prCodigo;
+*!*				GROUP BY CodPro ;
+*!*				INTO CURSOR cMovimientos
+*!*		ELSE
+*!*			SELECT CodPro, SUM(Entra) as Entra, SUM(Sale) as Sale, SUM(EntraFra) as EntraFra, SUM(SaleFra) as SaleFra ;
+*!*				FROM tMovim ;
+*!*				WHERE !DELETED("tMOVIM") .and. ;
+*!*					  tMovim.Fecha<=vFechaProceso .and. tMovim.CodPro=cProducto.prCodigo;
+*!*				GROUP BY CodPro ;
+*!*				INTO CURSOR cMovimientos
+*!*		ENDIF 		
+*!*		WITH Thisform.MovimProd
+*!*			IF _Tally>0 THEN
+*!*				GO TOP IN cMovimientos
+*!*					.Unidades	=0
+*!*					.Fracciones	=(cMovimientos.Entra*cProducto.UnixEnv)+cMovimientos.EntraFra
+*!*					.UnixEnv	=cProducto.UnixEnv
+*!*					
+*!*					.pcUniFra()
+*!*					
+
+*!*					vCantidadEntrada=.Unidades
+*!*					vFraccionEntrada=.Fracciones
+*!*					
+*!*					.Unidades	=0
+*!*					.Fracciones	=(cMovimientos.Sale*cProducto.UnixEnv)+cMovimientos.SaleFra
+*!*					.UnixEnv	=cProducto.UnixEnv
+*!*					
+*!*					.pcUniFra()
+*!*					
+*!*					vCantidadSalida=.Unidades
+*!*					vFraccionSalida=.Fracciones
+*!*			ENDIF
+*!*		
+*!*	*!*			IF vCantidadInicial<0 THEN
+*!*	*!*				.Unidades	=(vCantidadInicial+vCantidadSalida)-vCantidadEntrada
+*!*	*!*			ELSE
+*!*	*!*				.Unidades	=(vCantidadInicial+vCantidadEntrada)-vCantidadSalida
+*!*	*!*			ENDIF
+*!*	*!*			
+*!*	*!*			IF vFraccionInicial<0 THEN
+*!*	*!*				.Fracciones	=(vFraccionInicial+vFraccionSalida)-vFraccionEntrada
+*!*	*!*			ELSE
+*!*	*!*				.Fracciones	=(vFraccionInicial+vFraccionEntrada)-vFraccionSalida
+*!*	*!*			ENDIF
+
+*!*			.Unidades=vCantidadInicial+vCantidadEntrada-vCantidadSalida
+*!*			.Fracciones=vFraccionInicial+vFraccionEntrada-vFraccionSalida
+*!*			
+*!*			
+*!*			.UnixEnv	=cProducto.UnixEnv
+
+*!*			.pcUniFra()
+*!*					
+*!*			vCantidad=.Unidades
+*!*			vFraccion=.Fracciones
+*!*		ENDWITH
+
+*!*		vCanTMP=vCantidad
+*!*		vFraTMP=vFraccion
+
+*!*		STORE 0 TO vCanTmpSalida, vFraTmpSalida
+
+*!*		STORE "" TO vSentencia, vCondicionRubro, vCondicionFamilia, vCondicionBodega
+
+*!*		DO CASE
+*!*			CASE Thisform.OptionGroup1.Value=1	
+*!*				SELECT P2.Codigo, SUM(P2.aCantidad) as Cantidad, SUM(P2.aFraccion) as Fraccion ;
+*!*					FROM tDetPed as P2;
+*!*					LEFT JOIN tPedido as P1 ON (P2.Tipo+P2.Numero)=(P1.Tipo+P1.Numero) ;
+*!*					LEFT JOIN Producto as P ON P2.Codigo=P.prCodigo ;
+*!*					WHERE P2.Codigo=cProducto.prCodigo .and. EMPTY(ALLTRIM(P1.Prefactura)) .and. ;
+*!*						  P1.EdoNve  .and. !P1.BloqPed .and. P2.Tipo="NV" .and. ;
+*!*						  IIF(vFiltroBodegas,P1.Bodega=vBodegaFiltro, .t.) ;
+*!*					GROUP BY P2.Codigo ;
+*!*					INTO CURSOR cPedidos
+
+*!*			CASE Thisform.OptionGroup1.Value=2
+*!*				SELECT P2.Codigo, SUM(P2.aCantidad) as Cantidad, SUM(P2.aFraccion) as Fraccion ;
+*!*					FROM tDetPed as P2;
+*!*					LEFT JOIN tPedido as P1 ON (P2.Tipo+P2.Numero)=(P1.Tipo+P1.Numero) ;
+*!*					LEFT JOIN Producto as P ON P2.Codigo=P.prCodigo ;
+*!*					WHERE P2.Codigo=cProducto.prCodigo .and. EMPTY(ALLTRIM(P1.Prefactura)) .and. ;
+*!*						  P1.EdoNve  .and. !P1.BloqPed .and. P2.Tipo="NV" .and. ;
+*!*						  P.prFamilia in (SELECT FamCur.Codigo FROM FamCur WHERE FamCur.Sel) .and. ;
+*!*						  IIF(vFiltroBodegas,P1.Bodega=vBodegaFiltro, .t.) ;
+*!*					GROUP BY P2.Codigo ;
+*!*					INTO CURSOR cPedidos
+
+*!*			CASE Thisform.OptionGroup1.Value=3
+*!*				SELECT P2.Codigo, SUM(P2.aCantidad) as Cantidad, SUM(P2.aFraccion) as Fraccion ;
+*!*					FROM tDetPed as P2;
+*!*					LEFT JOIN tPedido as P1 ON (P2.Tipo+P2.Numero)=(P1.Tipo+P1.Numero) ;
+*!*					LEFT JOIN Producto as P ON P2.Codigo=P.prCodigo ;
+*!*					WHERE P2.Codigo=cProducto.prCodigo .and. EMPTY(ALLTRIM(P1.Prefactura)) .and. ;
+*!*						  P1.EdoNve  .and. !P1.BloqPed .and. P2.Tipo="NV" .and. ;
+*!*						  P.Rubro in (SELECT RubroCur.Codigo FROM RubroCur WHERE RubroCur.Sel) .and. ;
+*!*						  IIF(vFiltroBodegas,P1.Bodega=vBodegaFiltro, .t.) ;
+*!*					GROUP BY P2.Codigo ;
+*!*					INTO CURSOR cPedidos
+*!*		ENDCASE 	
+*!*			
+*!*		IF _Tally>0 THEN
+*!*			GO TOP IN cPedidos
+*!*			WITH Thisform.MovimProd
+*!*				.Unidades	=0
+*!*				.Fracciones	=(cPedidos.Cantidad*cProducto.UnixEnv)+cPedidos.Fraccion
+*!*				.UnixEnv	=cProducto.UnixEnv
+*!*				
+*!*				.pcUniFra()
+*!*				
+
+*!*				vCanTmpSalida=.Unidades
+*!*				vFraTmpSalida=.Fracciones
+*!*			ENDWITH
+*!*		ENDIF
+*!*			
+*!*		IF vCanTmp<0 THEN
+*!*			vCanTmp=vCanTmp+vCanTmpSalida
+*!*		ELSE
+*!*			vCanTmp=vCanTmp-vCanTmpSalida
+*!*		ENDIF
+*!*		
+*!*		IF vFraTmp<0 THEN
+*!*			vFraTmp=vFratmp+vFraTmpSalida
+*!*		ELSE
+*!*			vFraTmp=vFraTmp-vFraTmpSalida
+*!*		ENDIF
+*!*		
+
+*!*		WITH Thisform.MovimProd
+*!*			.Unidades	=vCanTmp
+*!*			.Fracciones	=vFraTmp
+
+*!*			.UnixEnv	=Producto.UnixEnv
+*!*			
+*!*			.pcUniFra()
+*!*			
+*!*			vCanTmp=.Unidades
+*!*			vFraTmp=.Fracciones
+*!*		ENDWITH
+
+*!*		IF Thisform.Check1.Value THEN
+*!*			DO CASE
+*!*				CASE Thisform.OptionGroup2.Value=1
+*!*					IF (vCantidad+vFraccion)<=0 THEN
+*!*						SKIP IN cProducto
+*!*						LOOP
+*!*					ENDIF
+*!*				CASE Thisform.OptionGroup2.Value=2
+*!*					IF (vCantidad+vFraccion)>=0 THEN
+*!*						SKIP IN cProducto
+*!*						LOOP
+*!*					ENDIF
+*!*				CASE Thisform.OptionGroup2.Value=3
+*!*					IF (vCantidad+vFraccion)!=0 THEN
+*!*						SKIP IN cProducto
+*!*						LOOP
+*!*					ENDIF
+*!*			ENDCASE
+*!*		ENDIF 			
+*!*		INSERT INTO InvCur VALUES (cProducto.prCodigo, cProducto.prDescrip, cProducto.prUniMed,;
+*!*								   cProducto.UnixEnv, vCantidad, vFraccion, vCanTMP, vFraTMP,;
+*!*								   cProducto.Prec1, cProducto.Prec2, cProducto.Prec3, cProducto.PreCom, ;
+*!*								   cProducto.prFamilia, cProducto.Rubro, cProducto.EdoPro,;
+*!*								   PADR(ALLTRIM(cProducto.prFamilia),10," ")+"01",;
+*!*								   PADR(ALLTRIM(cProducto.Rubro),10, " ")+"01","01")
+*!*								
+*!*		SKIP IN cProducto
+*!*	ENDDO
+
+*!*	IF RECCOUNT("INVCUR")>0 THEN
+*!*		IF Thisform.OptionGroup1.Value>1 THEN
+*!*			DO CASE
+*!*				CASE Thisform.OptionGroup1.Value=2
+*!*					SELECT CodFam, ALLTRIM(faDescrip) as Detalle, ;
+*!*						  (PADR(ALLTRIM(CodFam),10," ")+"00") as OrdenFamilia ;
+*!*						FROM InvCur ;
+*!*						LEFT JOIN faProduc ON CodFam=faCodigo ;
+*!*						GROUP BY CodFam INTO CURSOR cDivisiones
+*!*				CASE Thisform.OptionGroup1.Value=3
+*!*					SELECT Rubro, ALLTRIM(ruDescri) as Detalle, ;
+*!*						   (PADR(ALLTRIM(Rubro),10," ")+"00") as OrdenRubro ;
+*!*						FROM InvCur ;
+*!*						LEFT JOIN ruProduc ON Rubro=ruCodigo ;
+*!*						GROUP BY Rubro INTO CURSOR cDivisiones
+*!*			ENDCASE
+*!*			
+*!*			SELECT InvCur
+*!*			APPEND FROM DBF("cDIVISIONES")
+*!*		ENDIF 	
+
+*!*		DO CASE
+*!*			CASE Thisform.OptionGroup1.Value=1
+*!*				SELECT * FROM InvCur ORDER BY Codigo 		INTO CURSOR cInvCur
+*!*			CASE Thisform.OptionGroup1.Value=2
+*!*				SELECT * FROM InvCur ORDER BY OrdenFamilia 	INTO CURSOR cInvCur
+*!*			CASE Thisform.OptionGroup1.Value=3
+*!*				SELECT * FROM InvCur ORDER BY OrdenRubro 	INTO CURSOR cInvCur
+*!*		ENDCASE
+*!*	ELSE
+*!*		=MESSAGEBOX("No existen Datos")
+*!*		RETURN .f.
+*!*	ENDIF 			
+
+*!*	Thisform.Facturador1.mActivaTablas(.t., Thisform.Text1.Value)
+
+*!*	GO TOP IN cInvCur
+
+
+TEXT TO vParametros TEXTMERGE NOSHOW FLAGS 2
+<Fecha><<DTOC(Thisform.Text1.Value)>></Fecha>
+<BndFiltros><<IIF(Thisform.Check5.Value, "true", "false")>></BndFiltros>
+<FiltroFamilia><<IIF(Thisform.Text4.Value>0, "true", "false")>></FiltroFamilia>
+<FiltroRubro><<IIF(Thisform.text2.Value>0, "true", "false")>></FiltroRubro>
+<Separador><<IIF(Thisform.Check4.Value, "true", "false")>></Separador>
+<TipoSeparador><<ALLTRIM(STR(Thisform.OptionGroup1.Value))>></TipoSeparador>
+<BndBodegaEspecifica><<IIF(Thisform.Check3.Value,"true", "false")>></BndBodegaEspecifica>
+<CodigoBodega><<IIF(Thisform.Combo1.Value>0, aBodegas(Thisform.Combo1.Value,2), "")>></CodigoBodega>
+<BndFiltroxSaldo><<IIF(Thisform.Check1.Value, "true", "false")>></BndFiltroxSaldo>
+<TipoSaldo><<ALLTRIM(STR(Thisform.Optiongroup2.Value))>></TipoSaldo>
+<BndDesactivado><<IIF(Thisform.Check2.Value,"true", "false")>></BndDesactivado>
+ENDTEXT
+
+DO FORM g:\Desarrollo\IsstecErp\Form\wInventarioGeneral-2a WITH vParametros, Thisform.Facturador1, Thisform.MovimProd
+
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _40L147N0F
+[CLASS] checkbox
+[BASECLASS] checkbox
+[OBJNAME] Check2
+[PARENT] Form1
+[START PROPERTIES]
+Top = 307
+Left = 30
+Height = 17
+Width = 205
+FontBold = .T.
+AutoSize = .T.
+Alignment = 0
+BackStyle = 0
+Caption = "Incluye Productos Des-Activados"
+Value = .F.
+Name = "Check2"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _4YW1281C6
+[CLASS] checkbox
+[BASECLASS] checkbox
+[OBJNAME] Check3
+[PARENT] Form1
+[START PROPERTIES]
+Top = 207
+Left = 30
+Height = 17
+Width = 123
+FontBold = .T.
+AutoSize = .T.
+Alignment = 0
+BackStyle = 0
+Caption = "Bodega Especifica"
+Value = .F.
+Name = "Check3"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE InteractiveChange
+Thisform.Combo1.Enabled=This.Value
+
+ENDPROC
+PROCEDURE ProgrammaticChange
+This.InteractiveChange()
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I510WKRI
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label4
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+BackStyle = 0
+Caption = "Familias"
+Enabled = .F.
+Height = 17
+Left = 77
+Top = 91
+Width = 49
+TabIndex = 8
+Name = "Label4"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _4YX0GL4PD
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label5
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+BackStyle = 0
+Caption = "Rubros"
+Enabled = .F.
+Height = 17
+Left = 77
+Top = 114
+Width = 43
+TabIndex = 8
+Name = "Label5"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _4YX0GL4PE
+[CLASS] checkbox
+[BASECLASS] checkbox
+[OBJNAME] Check4
+[PARENT] Form1
+[START PROPERTIES]
+Top = 175
+Left = 30
+Height = 17
+Width = 92
+FontBold = .T.
+AutoSize = .T.
+Alignment = 0
+BackStyle = 0
+Caption = "Separadores"
+Value = .F.
+Name = "Check4"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE InteractiveChange
+Thisform.OptionGroup1.SetAll("ENABLED", This.Value, "OptionButton")
+ENDPROC
+PROCEDURE ProgrammaticChange
+This.InteractiveChange()
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _4YX0GL4PF
+[CLASS] checkbox
+[BASECLASS] checkbox
+[OBJNAME] Check5
+[PARENT] Form1
+[START PROPERTIES]
+Top = 65
+Left = 38
+Height = 17
+Width = 59
+FontBold = .T.
+AutoSize = .T.
+Alignment = 0
+Caption = "Filtros  "
+Value = .F.
+Name = "Check5"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE InteractiveChange
+STORE This.Value TO Thisform.Label4.Enabled, ;
+					Thisform.Label5.Enabled, ;
+					Thisform.Command2.Enabled, ;
+					Thisform.Command3.Enabled
+
+
+ENDPROC
+PROCEDURE ProgrammaticChange
+This.InteractiveChange()
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[START PROPERTIES]
+Arial, 0, 9, 5, 15, 12, 32, 3, 0
+Arial, 0, 8, 5, 14, 11, 29, 3, 0
+Arial, 1, 9, 6, 15, 12, 32, 3, 0
+[END PROPERTIES]
+[EOF]

@@ -1,0 +1,32 @@
+CLOSE ALL
+CLEAR ALL
+
+stdvia="\\192.168.0.120\d\Proyectos\Copol\Datos\"
+stdviaSec="\\192.168.0.120\d\Proyectos\Copol\Data_Consultas\"
+
+USE stdviaSec+"COPOL_SEC.Dbf" IN 0
+USE stdvia+"COPOL.Dbf" IN 0
+
+_ContadorFallas=0
+GO TOP IN Copol_sec
+DO WHILE !EOF("COPOL_SEC")
+	IF Copol_Sec.txt_Serie>32166 THEN 
+		_CodigoProduccion=PADR(ALLTRIM(STR(Copol_Sec.txt_Serie)),10, " ")
+		
+		IF !SEEK(_CodigoProduccion, "COPOL",1) THEN 
+			? "Producto Serie: "+_CodigoProduccion+", No existe en Principal"
+			_ContadorFallas=_ContadorFallas+1
+			
+			IF _ContadorFallas=150 THEN 
+				EXIT 
+			ENDIF 
+		ENDIF 
+	ENDIF 
+	
+	SKIP IN Copol_Sec
+ENDDO 
+
+CLOSE ALL
+CLEAR ALL
+
+

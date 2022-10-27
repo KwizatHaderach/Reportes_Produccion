@@ -1,0 +1,39 @@
+CLOSE ALL
+CLEAR ALL
+
+USE \\serverCopol\Sisgen\Datos\Propago2 IN 0
+USE \\ServerCopol\Sisgen\Datos\Prodocto IN 0
+
+
+GO TOP IN Propago2
+DO WHILE !EOF("PROPAGO2")
+	IF EMPTY(ALLTRIM(Propago2.tiFact)) .or. EMPTY(ALLTRIM(Propago2.nuFact)) THEN 
+		SKIP IN Propago2
+		LOOP
+	ENDIF 
+	
+	IF VAL(Numero)=0 THEN 
+		SKIP IN Propago2
+		LOOP
+	ENDIF 
+	
+	IF SEEK(Propago2.tiFact+Propago2.nuFact, "PRODOCTO",1) THEN 
+		IF Prodocto.RutPro!=Propago2.RutPag THEN 
+			? "Documento con Rut Erroneo: "+ALLTRIM(Propago2.Numero)
+			SKIP IN Propago2
+			LOOP 
+		ENDIF 
+		IF Prodocto.facPro!=Propago2.NumDoc THEN 
+			? "Numero de Documento Erroneo: "+ALLTRIM(Propago2.Numero)
+			SKIP IN Propago2
+			LOOP
+		ENDIF 
+	ELSE
+		? "Documento No encontrado: "+Propago2.tiFact+"-"+Propago2.nuFact
+	ENDIF 
+	
+	SKIP IN Propago2
+ENDDO 
+
+CLOSE ALL
+CLEAR ALL

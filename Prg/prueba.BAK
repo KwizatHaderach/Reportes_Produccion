@@ -1,0 +1,1 @@
+IIF(!EMPTY(ALLTRIM(Filas.Serie1)) .and. !EMPTY(ALLTRIM(Filas.Serie2)),2,IIF(EMPTY(ALLTRIM(Filas.Serie1)) .and. EMPTY(ALLTRIM(Filas.Serie2)),0,1))

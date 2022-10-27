@@ -1,0 +1,1908 @@
+SCCTEXT Version 4.0.0.2
+PLATFORM C(8,0),UNIQUEID C(10,0),TIMESTAMP N(10,0),CLASS M(4,0),CLASSLOC M(4,0),BASECLASS M(4,0),OBJNAME M(4,0),PARENT M(4,0),PROPERTIES M(4,0),PROTECTED M(4,0),METHODS M(4,0),OBJCODE M(4,0),OLE M(4,0),OLE2 M(4,0),RESERVED1 M(4,0),RESERVED2 M(4,0),RESERVED3 M(4,0),RESERVED4 M(4,0),RESERVED5 M(4,0),RESERVED6 M(4,0),RESERVED7 M(4,0),RESERVED8 M(4,0),USER M(4,0)
+1252
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] Class     
+[START RESERVED1]
+VERSION =   3.00[END RESERVED1]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH0ZUJCD
+[CLASS] container
+[BASECLASS] container
+[OBJNAME] distritos
+[START PROPERTIES]
+Width = 473
+Height = 52
+BackStyle = 0
+regionselec = .F.
+ciudadselec = .F.
+comunaselec = .F.
+regionload = .F.
+ciudadload = .F.
+comunaload = .F.
+Name = "distritos"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Destroy
+IF vTablaRegionesSinUso THEN
+	IF USED("Regiones") THEN
+		SELECT Regiones
+		USE
+	ENDIF
+ENDIF
+
+IF vTablaCiudadesSinUso THEN
+	IF USED("TabCiu") THEN
+		SELECT TabCiu
+		USE
+	ENDIF
+ENDIF
+
+IF vTablaComunasSinUso THEN
+	IF USED("TabCom") THEN
+		SELECT TabCom
+		USE
+	ENDIF
+ENDIF
+
+
+RELEASE aRegion, aCiudad, aComuna, vTablaRegionesSinUso, vTablaCiudadesSinUso, vTablaComunasSinUso
+
+ENDPROC
+PROCEDURE Init
+PUBLIC vTablaRegionesSinUso, vTablaCiudadesSinUso, vTablaComunasSinUso
+
+STORE .f. TO vTablaRegionesSinUso, vTablaCiudadesSinUso, vTablaComunasSinUso
+
+IF !USED("Regiones") THEN
+	vTablaSelec=Stdvia+"Regiones.Dbf"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("La Tabla de Regiones no existe en la ubicacion: "+vTablaSelec)
+		RETURN .f.
+	ENDIF
+	
+	SELECT 0
+	USE &vTablaSelec ALIAS Regiones
+	SET ORDER TO 2
+	vTablaRegionesSinUso=.t.
+ENDIF
+
+IF !USED("TabCiu") THEN
+	vTablaSelec=Stdvia+"TabCiu.Dbf"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("La Tabla de Ciudades no existe en la ubicacion: "+vTablaSelec)
+		RETURN .f.
+	ENDIF
+	
+	SELECT 0
+	USE &vTablaSelec ALIAS TabCiu
+	SET ORDER TO 2
+	vTablaCiudadesSinUso=.t.
+ENDIF
+
+IF !USED("TabCom") THEN
+	vTablaSelec=Stdvia+"TabCom.Dbf"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("La Tabla de Comunas no existe en la ubicacion: "+vTablaSelec)
+		RETURN .f.
+	ENDIF
+	
+	SELECT 0
+	USE &vTablaSelec ALIAS TabCom
+	SET ORDER TO 2
+	vTablaComunasSinUso=.t.
+ENDIF
+
+STORE 0 TO vContadorRegion
+
+This.Combo1.RowSource=""
+
+SELECT Regiones
+SCAN FOR !DELETED()
+	vContadorRegion=vContadorRegion+1
+	
+	PUBLIC ARRAY aRegion(vContadorRegion,2)
+	
+	aRegion[vContadorRegion,1]=Regiones.Descri
+	aRegion[vContadorRegion,2]=Regiones.Codigo
+	
+	SELECT Regiones
+ENDSCAN
+
+
+IF vContadorRegion>0 THEN
+	This.Combo1.RowSource="aRegion"
+ENDIF
+
+
+ENDPROC
+PROCEDURE peditadato
+IF !EMPTY(ALLTRIM(This.RegionLoad)) THEN
+	FOR vRegion=1 TO ALEN(aRegion,1)
+		IF UPPER(ALLTRIM(aRegion[vRegion,2]))==ALLTRIM(UPPER(This.RegionLoad)) THEN
+			This.Combo1.Value=vRegion
+			This.RegionSelec=aRegion[vRegion,1]
+			This.Combo1.InteractiveChange()
+			
+			IF !EMPTY(ALLTRIM(This.CiudadLoad)) THEN
+				FOR vCiudad=1 TO ALEN(aCiudad,1)
+					IF UPPER(ALLTRIM(aCiudad[vCiudad,2]))==ALLTRIM(UPPER(This.CiudadLoad)) THEN
+						This.Combo2.Value=vCiudad
+						This.CiudadSelec=aCiudad[vCiudad,1]
+						This.Combo2.InteractiveChange()
+						
+						IF !EMPTY(ALLTRIM(This.ComunaLoad)) THEN
+							FOR vComuna=1 TO ALEN(aComuna,1)
+								IF UPPER(ALLTRIM(aComuna[vComuna,2]))==ALLTRIM(UPPER(This.ComunaLoad)) THEN
+									This.Combo3.Value=vComuna
+									This.ComunaSelec=aComuna[vComuna,1]
+									EXIT
+								ENDIF
+							ENDFOR
+						ELSE
+							This.Combo3.Value=0
+						ENDIF
+						EXIT
+					ENDIF
+				ENDFOR
+			ELSE
+				This.Combo2.Value=0
+			ENDIF
+			EXIT
+		ENDIF
+	ENDFOR
+ELSE
+	This.Combo1.Value=0
+ENDIF
+
+ENDPROC
+[END METHODS]
+[START RESERVED1]
+Class[END RESERVED1]
+[START RESERVED2]
+7[END RESERVED2]
+[START RESERVED3]
+regionselec
+ciudadselec
+comunaselec
+regionload
+ciudadload
+comunaload
+*peditadato 
+[END RESERVED3]
+[START RESERVED6]
+Pixels[END RESERVED6]
+[START RESERVED8]
+..\sergio meneses - isstec\modulos\colores.h[END RESERVED8]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH0ZUJCD
+[CLASS] combobox
+[BASECLASS] combobox
+[OBJNAME] Combo1
+[PARENT] distritos
+[START PROPERTIES]
+RowSourceType = 5
+RowSource = ""
+Height = 24
+Left = 3
+Style = 2
+Top = 3
+Width = 152
+Themes = .F.
+Name = "Combo1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE InteractiveChange
+This.Parent.Combo2.RowSource=""
+This.Parent.Combo3.RowSource=""
+vContadorCiudad=0
+
+This.Parent.RegionSelec=aRegion[This.Value,1]
+This.Parent.CiudadSelec=""
+This.Parent.ComunaSelec=""
+
+
+IF !USED("TabCiu") THEN
+	vTablaSelec=Stdvia+"TabCiu.Dbf"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("La Tabla de Ciudades no existe en la ubicacion: "+vTablaSelec)
+		RETURN .f.
+	ENDIF
+	
+	SELECT 0
+	USE &vTablaSelec ALIAS TabCiu
+	SET ORDER TO 2
+	vTablaCiudadesSinUso=.t.
+ENDIF
+
+SELECT TabCiu
+SCAN FOR TabCiu.CodReg=aRegion[This.Value,2]
+	vContadorCiudad=vContadorCiudad+1
+	
+	PUBLIC ARRAY aCiudad(vContadorCiudad,2)
+	
+	aCiudad[vContadorCiudad,1]=TabCiu.Descri
+	aCiudad[vContadorCiudad,2]=TabCiu.Codigo
+	
+	SELECT TabCiu
+ENDSCAN
+
+IF USED("TabCiu") THEN
+	SELECT TabCiu
+	USE
+ENDIF
+
+IF vContadorCiudad>0 THEN
+	This.Parent.Combo2.RowSource="aCiudad"
+ENDIF
+
+
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH0ZYUK9
+[CLASS] combobox
+[BASECLASS] combobox
+[OBJNAME] Combo2
+[PARENT] distritos
+[START PROPERTIES]
+RowSourceType = 5
+RowSource = ""
+Height = 24
+Left = 156
+Style = 2
+Top = 3
+Width = 160
+Themes = .F.
+Name = "Combo2"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE InteractiveChange
+This.Parent.Combo3.RowSource=""
+
+This.Parent.CiudadSelec=aCiudad[This.Value,1]
+This.Parent.ComunaSelec=""
+
+vContadorComuna=0
+
+IF !USED("TabCom") THEN
+	vTablaSelec=Stdvia+"TabCom.Dbf"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("La Tabla de Comunas no existe en la ubicacion: "+vTablaSelec)
+		RETURN .f.
+	ENDIF
+	
+	SELECT 0
+	USE &vTablaSelec ALIAS TabCom
+	SET ORDER TO 2
+	vTablaComunasSinUso=.t.
+ENDIF
+
+SELECT TabCom
+SCAN FOR TabCom.CodProv=aCiudad[This.Value,2]
+	vContadorComuna=vContadorComuna+1
+	
+	PUBLIC ARRAY aComuna(vContadorComuna,2)
+	
+	aComuna[vContadorComuna,1]=TabCom.Descri
+	aComuna[vContadorComuna,2]=TabCom.Codigo
+	SELECT TabCom
+ENDSCAN
+
+IF USED("TabCom") THEN
+	SELECT TabCom
+	USE
+ENDIF
+
+IF vContadorComuna>0 THEN
+	This.Parent.Combo3.RowSource="aComuna"
+ENDIF
+
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH0ZYUKA
+[CLASS] combobox
+[BASECLASS] combobox
+[OBJNAME] Combo3
+[PARENT] distritos
+[START PROPERTIES]
+RowSourceType = 5
+RowSource = ""
+Height = 24
+Left = 317
+Style = 2
+Top = 3
+Width = 152
+Themes = .F.
+Name = "Combo3"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE InteractiveChange
+This.Parent.ComunaSelec=aComuna[This.Value,1]
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH0ZUJCD
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label1
+[PARENT] distritos
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+BackStyle = 0
+Caption = "Regiones"
+Height = 17
+Left = 52
+Top = 29
+Width = 55
+Name = "Label1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH0ZUJCD
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label2
+[PARENT] distritos
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+BackStyle = 0
+Caption = "Ciudades"
+Height = 17
+Left = 209
+Top = 29
+Width = 55
+Name = "Label2"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH11PWNL
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label3
+[PARENT] distritos
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+BackStyle = 0
+Caption = "Comunas"
+Height = 17
+Left = 365
+Top = 30
+Width = 56
+Name = "Label3"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[OBJNAME] distritos
+[START PROPERTIES]
+Arial, 0, 9, 5, 15, 12, 32, 3, 0
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH12I5PO
+[CLASS] container
+[BASECLASS] container
+[OBJNAME] disvertical
+[START PROPERTIES]
+Width = 300
+Height = 110
+regionselec = .F.
+comunaselec = .F.
+ciudadselec = .F.
+Name = "disvertical"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Destroy
+TRY
+	IF vTablaRegionesSinUso THEN
+		IF USED("Regiones") THEN
+			SELECT Regiones
+			USE
+		ENDIF
+	ENDIF
+
+	IF vTablaCiudadesSinUso THEN
+		IF USED("TabCiu") THEN
+			SELECT TabCiu
+			USE
+		ENDIF
+	ENDIF
+
+	IF vTablaComunasSinUso THEN
+		IF USED("TabCom") THEN
+			SELECT TabCom
+			USE
+		ENDIF
+	ENDIF
+
+	RELEASE aRegion, aCiudad, aComuna, vTablaRegionesSinUso, vTablaCiudadesSinUso, vTablaComunasSinUso
+CATCH
+	WAIT WINDOW "Cerrando" NOWAIT
+	WAIT CLEAR
+ENDTRY
+ENDPROC
+PROCEDURE Init
+TRY
+	vPruebaVar=vTablaRegionesSinUso
+CATCH
+	PUBLIC vTablaRegionesSinUso, vTablaCiudadesSinUso, vTablaComunasSinUso
+	STORE .f. TO vTablaRegionesSinUso, vTablaCiudadesSinUso, vTablaComunasSinUso
+
+	IF !USED("Regiones") THEN
+		vTablaSelec=Stdvia+"Regiones.Dbf"
+		
+		IF !FILE(vTablaSelec) THEN
+			=MESSAGEBOX("La Tabla de Regiones no existe en la ubicacion: "+vTablaSelec)
+			RETURN .f.
+		ENDIF
+		
+		SELECT 0
+		USE &vTablaSelec ALIAS Regiones
+		SET ORDER TO 2
+		vTablaRegionesSinUso=.t.
+	ENDIF
+
+	IF !USED("TabCiu") THEN
+		vTablaSelec=Stdvia+"TabCiu.Dbf"
+		
+		IF !FILE(vTablaSelec) THEN
+			=MESSAGEBOX("La Tabla de Ciudades no existe en la ubicacion: "+vTablaSelec)
+			RETURN .f.
+		ENDIF
+		
+		SELECT 0
+		USE &vTablaSelec ALIAS TabCiu
+		SET ORDER TO 2
+		vTablaCiudadesSinUso=.t.
+	ENDIF
+
+	IF !USED("TabCom") THEN
+		vTablaSelec=Stdvia+"TabCom.Dbf"
+		
+		IF !FILE(vTablaSelec) THEN
+			=MESSAGEBOX("La Tabla de Comunas no existe en la ubicacion: "+vTablaSelec)
+			RETURN .f.
+		ENDIF
+		
+		SELECT 0
+		USE &vTablaSelec ALIAS TabCom
+		SET ORDER TO 2
+		vTablaComunasSinUso=.t.
+	ENDIF
+ENDTRY
+STORE 0 TO vContadorRegion
+
+This.Combo1.RowSource=""
+
+SELECT Regiones
+SCAN FOR !DELETED()
+	vContadorRegion=vContadorRegion+1
+	
+	PUBLIC ARRAY aRegion(vContadorRegion,2)
+	
+	aRegion[vContadorRegion,1]=Regiones.Descri
+	aRegion[vContadorRegion,2]=Regiones.Codigo
+	
+	SELECT Regiones
+ENDSCAN
+
+
+IF vContadorRegion>0 THEN
+	This.Combo1.RowSource="aRegion"
+ENDIF
+
+ENDPROC
+[END METHODS]
+[START RESERVED1]
+Class[END RESERVED1]
+[START RESERVED2]
+7[END RESERVED2]
+[START RESERVED3]
+regionselec
+comunaselec
+ciudadselec
+[END RESERVED3]
+[START RESERVED6]
+Pixels[END RESERVED6]
+[START RESERVED8]
+..\sergio meneses - isstec\modulos\colores.h[END RESERVED8]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH12KXJ6
+[CLASS] combobox
+[BASECLASS] combobox
+[OBJNAME] Combo1
+[PARENT] disvertical
+[START PROPERTIES]
+RowSourceType = 5
+RowSource = ""
+Height = 24
+Left = 81
+Style = 2
+Top = 13
+Width = 199
+Themes = .F.
+Name = "Combo1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE InteractiveChange
+This.Parent.Combo2.RowSource=""
+This.Parent.Combo3.RowSource=""
+vContadorCiudad=0
+
+IF This.Value!=0 THEN
+	This.Parent.RegionSelec=aRegion[This.Value,1]
+	This.Parent.CiudadSelec=""
+	This.Parent.ComunaSelec=""
+
+	SELECT TabCiu
+	SCAN FOR TabCiu.CodReg=aRegion[This.Value,2]
+		vContadorCiudad=vContadorCiudad+1
+		
+		PUBLIC ARRAY aCiudad(vContadorCiudad,2)
+		
+		aCiudad[vContadorCiudad,1]=TabCiu.Descri
+		aCiudad[vContadorCiudad,2]=TabCiu.Codigo
+		
+		SELECT TabCiu
+	ENDSCAN
+
+	IF vContadorCiudad>0 THEN
+		This.Parent.Combo2.RowSource="aCiudad"
+	ENDIF
+ENDIF
+
+ENDPROC
+PROCEDURE ProgrammaticChange
+This.InteractiveChange
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH12KXJ8
+[CLASS] combobox
+[BASECLASS] combobox
+[OBJNAME] Combo2
+[PARENT] disvertical
+[START PROPERTIES]
+RowSourceType = 5
+RowSource = ""
+Height = 24
+Left = 81
+Style = 2
+Top = 39
+Width = 199
+Themes = .F.
+Name = "Combo2"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE InteractiveChange
+This.Parent.Combo3.RowSource=""
+
+IF This.Value!=0 THEN
+	This.Parent.CiudadSelec=aCiudad[This.Value,1]
+	This.Parent.ComunaSelec=""
+
+	vContadorComuna=0
+
+	SELECT TabCom
+	SCAN FOR TabCom.CodProv=aCiudad[This.Value,2]
+		vContadorComuna=vContadorComuna+1
+		
+		PUBLIC ARRAY aComuna(vContadorComuna,2)
+		
+		aComuna[vContadorComuna,1]=TabCom.Descri
+		aComuna[vContadorComuna,2]=TabCom.Codigo
+		SELECT TabCom
+	ENDSCAN
+
+	IF vContadorComuna>0 THEN
+		This.Parent.Combo3.RowSource="aComuna"
+	ENDIF
+ENDIF
+ENDPROC
+PROCEDURE ProgrammaticChange
+This.InteractiveChange
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH12KXJ9
+[CLASS] combobox
+[BASECLASS] combobox
+[OBJNAME] Combo3
+[PARENT] disvertical
+[START PROPERTIES]
+RowSourceType = 5
+RowSource = ""
+Height = 24
+Left = 81
+Style = 2
+Top = 65
+Width = 199
+Themes = .F.
+Name = "Combo3"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE InteractiveChange
+IF This.Value!=0 THEN
+	This.Parent.ComunaSelec=aComuna[This.Value,1]
+ENDIF
+ENDPROC
+PROCEDURE ProgrammaticChange
+This.InteractiveChange
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _42L0WCD7F
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label1
+[PARENT] disvertical
+[START PROPERTIES]
+Caption = "Registro"
+Height = 17
+Left = 15
+Top = 19
+Width = 40
+Name = "Label1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _42L0WCD7F
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label2
+[PARENT] disvertical
+[START PROPERTIES]
+Caption = "Ciudades"
+Height = 17
+Left = 15
+Top = 44
+Width = 40
+Name = "Label2"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _4WY0ZPW9L
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label3
+[PARENT] disvertical
+[START PROPERTIES]
+Caption = "Comuna"
+Height = 17
+Left = 15
+Top = 71
+Width = 40
+Name = "Label3"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[OBJNAME] disvertical
+[START PROPERTIES]
+Arial, 0, 9, 5, 15, 12, 32, 3, 0
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3LH13VSCA
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] rutin
+[START PROPERTIES]
+Height = 23
+Width = 100
+tipodato = .F.
+antiguodato = .F.
+Name = "rutin"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Valid
+vCodigoRut=ALLTRIM(This.Value)
+IF EMPTY(vCodigoRut) THEN
+	RETURN
+ENDIF
+
+IF SUBSTR(vCodigoRut,LEN(vCodigoRut)-1,1)!="-" THEN
+	=MESSAGEBOX("El Codigo Introducido no contiene el separador del Digito verificador")
+	RETURN .f.
+ENDIF
+This.Value=PADL(ALLTRIM(This.Value),12," ")
+
+xValor=This.Value
+op=""
+
+LOCAL j,dig,xrut,suma,k,ancho,anchotot,pos
+
+vAntOrderClientes=""
+
+IF !USED("Clientes") THEN
+	vTablaSelec=StdVia+"Clientes.Dbf"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("La Tabla Clientes no se encuentra Accesible en este momento")
+		RETURN .f.
+	ENDIF
+	
+	SELECT 0
+	USE &vTablaSelec ALIAS Clientes
+	SET ORDER TO 1
+ELSE
+	SELECT Clientes
+	vAntOrderClientes=ORDER()
+ENDIF
+
+IF !USED("PrPrm") THEN
+	vTablaSelec=StdVia+"PrPrm.Dbf"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("La Tabla Parametros no se encuentra Accesible en este momento")
+		RETURN .f.
+	ENDIF
+	
+	SELECT 0
+	USE &vTablaSelec ALIAS PrPrm
+	GO TOP
+ENDIF
+
+SELECT PrPrm
+	StdRutCon0=PrPrm.RutconCero
+	
+xvalor = ALLTRIM(xvalor)
+anchotot = 12
+op = IIF(EMPTY(op), 0, op)
+pos = AT("-",xvalor)
+IF pos > 0
+	xvalor = LEFT(xvalor,pos-1)+RIGHT(xvalor,1)
+ENDIF
+*STUFF(xvalor,1,".","")
+ancho = LEN(xvalor)
+IF !ISALPHA(xvalor) AND !EMPTY(xvalor) AND (stdrutcon0 != "S" OR (stdrutcon0 = "S" AND LEFT(xvalor,1) != "0"))
+    k=ancho-1
+	xrut=left(xvalor,k)
+	dig = RIGHT(xvalor,1)
+	suma = 0
+	k = 2
+	FOR j = LEN(xrut) TO 1 STEP -1
+		suma = suma + VAL(SUBSTR(xrut,j,1)) * k
+		k = IIF(k=7,1,k)
+		k = k + 1
+	NEXT
+	digx  = 11 - MOD(suma,11)
+	digit = IIF(digx=10,"K",ALLTRIM(STR(digx)))
+	digit = IIF(digx=11,"0",digit)
+	IF op = 3
+		RETURN digit
+	ENDIF
+	IF digit != dig .AND. (ISDIGIT(dig) .OR. dig = "K")
+		xvalor = PADL(xvalor,anchotot)
+           IF MESSAGEBOX("El Rut no está correctamente digitado    "+CHR(13)+;
+					  "Ver Dígito verificador    ",0+48,"Rut no válido") != 6
+				xvalor = PADR(ALLTRIM(xvalor),anchotot)
+				RETURN .f.
+			ENDIF
+    ELSE
+	IF digit != dig .AND. !ISDIGIT(dig) .AND. dig <> "K"
+       xvalor = PADL(xvalor,anchotot)
+	   Xxvalor = SUBSTR(XVALOR,1,11)+"-"+RIGHT(xvalor,1)
+	   XXVALOR = SUBSTR(XXVALOR,2,12)
+	   SELECT Clientes
+       IF !SEEK(XXVALOR,"Clientes")
+          IF MESSAGEBOX("El Rut no está correctamente digitado    "+CHR(13)+;
+			            "Ver Dígito verificador    ",0+48,"Rut no válido") != 6
+             xvalor = PADR(ALLTRIM(xvalor),anchotot)
+			 RETURN .f.
+		  ENDIF
+       ENDIF
+	ENDIF
+	ENDIF
+	xvalor = TRANSFORM(VAL(xrut),RIGHT("9999999999-",anchotot-1))+dig
+ENDIF
+IF stdrutcon0 = "S" AND LEFT(xvalor,1) = "0"
+	xvalor = LEFT(xvalor,ancho-1)+"-"+RIGHT(xvalor,1)
+ENDIF
+xvalor = PADL(ALLTRIM(xvalor),anchotot)
+
+
+SELECT Clientes
+SET ORDER TO 1
+SEEK(This.Value)
+IF FOUND() then
+	IF This.TipoDato THEN
+		=MESSAGEBOX("Este Codigo ya se encuentra Registrado en la tabla de Clientes, Reingrese otro")
+		RETURN .f.
+	ELSE
+		IF This.Value!=This.AntiguoDato THEN
+			=MESSAGEBOX("Este Codigo ya se encuentra Registrado en la tabla de Clientes, Reingrese otro")
+			RETURN .f.
+		ENDIF
+	ENDIF 			
+ENDIF
+SET ORDER TO &vAntOrderClientes
+RETURN .t.
+
+
+
+
+
+
+ENDPROC
+[END METHODS]
+[START RESERVED1]
+Class[END RESERVED1]
+[START RESERVED2]
+1[END RESERVED2]
+[START RESERVED3]
+tipodato
+antiguodato
+[END RESERVED3]
+[START RESERVED6]
+Pixels[END RESERVED6]
+[START RESERVED8]
+..\sergio meneses - isstec\modulos\colores.h[END RESERVED8]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[OBJNAME] rutin
+[START PROPERTIES]
+Arial, 0, 9, 5, 15, 12, 32, 3, 0
+[END PROPERTIES]
+[START RESERVED1]
+ 2 ..\..\..\sergio meneses - isstec\modulos\colores.hvÔ#X&F[END RESERVED1]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3TP0SE8SX
+[CLASS] custom
+[BASECLASS] custom
+[OBJNAME] grabafueraperiodo
+[START PROPERTIES]
+Height = 18
+Width = 41
+tipo = 
+numero = 
+usuario = 
+accion = 
+fechadoc = {}
+bndperact = .F.
+Name = "grabafueraperiodo"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE grabadatos
+IF !USED("DefIni") THEN
+	vTablaUsada2=.f.
+ELSE
+	vTablaUsada2=.t.
+ENDIF
+
+vTablaSelec=StdViaLoc+"Usuario\DefIni.dbf"
+
+IF !FILE(vTablaSelec) THEN
+	=MESSAGEBOX("No existe Tabla de Parametros iniciales, la Accion no pudo Completarse",0+64+128,"Mensaje del Sistema")
+	RETURN .f.
+ENDIF
+
+SELECT 0
+USE &vTablaSelec ALIAS DefIni
+
+vPeriodoActual=PADL(ALLTRIM(STR(MONTH(DefIni.IniFecPro))),2,"0")+PADL(ALLTRIM(STR(YEAR(DefIni.IniFecPro))),4,"0")
+
+IF !USED("Aud003") THEN
+	vTablaUsada=.f.
+ELSE
+	vTablaUsada=.t.
+ENDIF
+
+vTablaSelec=StdVia+"Aud003.DBF"
+
+IF !FILE(vTablaSelec) THEN
+	=MESSAGEBOX("No existe Tabla de Auditoria, la Accion no pudo Completarse",0+64+128,"Mensaje del Sistema")
+	RETURN .f.
+ENDIF
+
+SELECT 0
+USE &vTablaSelec ALIAS Aud003
+
+*Saber el Ip del Equipo y Estación de Trabajo
+loWinSock = CREATEOBJECT("mswinsock.winsock.1")
+
+*!*	loWinSock.LocalIP && numero del ip del equipo local
+
+*!*	loWinSock.LocalHostName && nombre de la estacion de trabajo local
+
+WITH This
+	INSERT INTO Aud003 VALUES (.Tipo, .Numero, .Usuario, .Accion, .FechaDoc, ;
+								TIME(), DATE(), .BndPerAct, vPeriodoActual,;
+								SYS(0), loWinSock.LocalIP)
+ENDWITH
+
+RELEASE loWinSock
+
+IF !vTablaUsada THEN
+	SELECT Aud003
+	USE
+ENDIF
+
+IF !vTablaUsada2 THEN
+	SELECT DefIni
+	USE
+ENDIF
+
+ENDPROC
+[END METHODS]
+[START RESERVED1]
+Class[END RESERVED1]
+[START RESERVED2]
+1[END RESERVED2]
+[START RESERVED3]
+tipo
+numero
+usuario
+accion
+fechadoc
+bndperact
+*grabadatos 
+[END RESERVED3]
+[START RESERVED6]
+Pixels[END RESERVED6]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[OBJNAME] grabafueraperiodo
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3TT133ONO
+[CLASS] commandbutton
+[BASECLASS] commandbutton
+[OBJNAME] busqueda
+[START PROPERTIES]
+Height = 30
+Width = 35
+Picture = ..\bmp\find.bmp
+Caption = ""
+objetollamado = .F.
+baseselec = .F.
+anteriorbusqueda = .F.
+resultado = .F.
+numerocampos = 0
+Name = "busqueda"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Init
+PUBLIC vcOpcion, vExacto, vOpcionBusqueda, vAnteriorExacto
+
+vcOpcion=0
+STORE .f. TO vExacto, vAnteriorExacto
+Store 1 to  vOpcionBusqueda
+
+This.Resultado=""
+This.AnteriorBusqueda=""
+This.BaseSelec=""
+
+
+ENDPROC
+PROCEDURE pbusqueda
+LPARAMETERS vpModoLlamado
+IF EMPTY(ALLTRIM(This.BaseSelec)) THEN
+	RETURN .f.
+ENDIF
+
+vcopcion=This.IniCampo
+vcBaseSelec=This.BaseSelec
+vAnteriorExacto=vExacto
+
+SELECT &vcBaseSelec
+
+IF USED('MaqCur')
+	SELECT TOP 1	bs.codigo,;
+					bs.nroplaca,;
+					bs.rut;
+	FROM			(vcBaseSelec) as bs;
+	ORDER BY		bs.nroplaca;
+	INTO CURSOR		tab_x
+ENDIF	
+
+=AFIELDS(vcResultadoCampos)
+
+IF USED('MaqCur')
+	USE IN tab_x
+	SELECT &vcBaseSelec
+ENDIF
+
+vContadorCampos=0
+FOR vcCampos=This.IniCampo TO This.NumeroCampos
+	IF vcResultadoCampos[vcCampos,2]="C" .or. vcResultadoCampos[vcCampos,2]="N" THEN
+		vContadorCampos=vContadorCampos+1
+		PUBLIC ARRAY vcaCampos (vContadorCampos,2)
+		
+		vcaCampos[vContadorCampos,1]=vcResultadoCampos[vcCampos,1]
+		vcaCampos[vContadorCampos,2]=vcResultadoCampos[vcCampos,2]
+	ENDIF
+ENDFOR
+
+vOpcionBusqueda=vpModoLlamado
+
+IF vpModoLlamado=1 THEN
+	RELEASE vcResultadoCampos
+	DO FORM g:\desarrollo\isstecerp\form\wRecogePalabra-2 TO This.Resultado WITH This.AnteriorBusqueda, vcBaseSelec
+ELSE
+	IF EMPTY(ALLTRIM(This.Resultado)) THEN
+		RETURN .f.
+	ENDIF
+ENDIF
+
+SELECT &vcBaseSelec
+gcPuntero=RECCOUNT()
+IF !EMPTY(This.Resultado) THEN
+	IF vcOpcion!=0 THEN
+		IF vcaCampos[vcOpcion,2]="C" THEN
+			vRangoBusqueda="Alltrim(UPPER("+FIELD(vcaCampos[vcOpcion,1])+"))"
+		ENDIF
+		IF vcaCampos[vcOpcion,2]="N" THEN
+			vRangoBusqueda="Alltrim(UPPER(STR("+FIELD(vcaCampos[vcOpcion,1])+")))"
+		ENDIF
+	ENDIF
+
+	IF vOpcionBusqueda=1 THEN
+		GO TOP
+
+		IF vExacto THEN
+			LOCATE FOR ALLTRIM(UPPER(This.Resultado))==&vRangoBusqueda
+		ELSE
+			LOCATE FOR ALLTRIM(UPPER(This.Resultado)) $ &vRangoBusqueda
+		ENDIF
+
+	ELSE
+		IF vExacto!=vAnteriorExacto THEN
+			GO TOP
+			IF vExacto THEN
+				LOCATE FOR ALLTRIM(UPPER(This.Resultado))==&vRangoBusqueda
+			ELSE
+				LOCATE FOR ALLTRIM(UPPER(This.Resultado)) $ &vRangoBusqueda
+			ENDIF
+		ELSE
+			CONTINUE
+		ENDIF
+	ENDIF
+	IF !FOUND() then
+		=MESSAGEBOX("No se encuentran coincidencias",0+64+128,"Mensaje del Sistema")
+		SELECT &vcBaseSelec
+		GO gcPuntero
+	ENDIF
+	vAnteriorExacto=vExacto
+	This.AnteriorBusqueda=This.Resultado
+ENDIF
+*&This.ObjetoLlamado
+
+ENDPROC
+[END METHODS]
+[START RESERVED1]
+Class[END RESERVED1]
+[START RESERVED2]
+1[END RESERVED2]
+[START RESERVED3]
+objetollamado
+baseselec
+anteriorbusqueda
+resultado
+numerocampos
+inicampo
+*pbusqueda 
+[END RESERVED3]
+[START RESERVED6]
+Pixels[END RESERVED6]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[OBJNAME] busqueda
+[START PROPERTIES]
+Arial, 0, 9, 5, 15, 12, 32, 3, 0
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3XK0SBX3O
+[CLASS] custom
+[BASECLASS] custom
+[OBJNAME] permisos
+[START PROPERTIES]
+Name = "permisos"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Destroy
+RELEASE vTienePermisoConsulta, vTienePermisoIngresa, vTienePermisoModifica, vTienePermisoTotal
+ENDPROC
+PROCEDURE Init
+
+
+ENDPROC
+PROCEDURE pextraepermisos
+LPARAMETERS vpFormulario, vpUsuario
+
+PUBLIC vTienePermisoConsulta, vTienePermisoIngresa, vTienePermisoModifica, vTienePermisoTotal
+vTablaSinUso=.f.
+STORE .F. TO vTienePermisoConsulta, vTienePermisoIngresa, vTienePermisoModifica, vTienePermisoTotal
+
+IF !USED("prmAcc") THEN
+	vTablaSelec=StdVia+"prmAcc.Dbf"
+	IF !FILE(vTablaSelec) THEN
+		RETURN .f.
+	ENDIF
+
+	SELECT 0
+	USE &vTablaSelec ALIAS prmAcc SHARED
+	vTablaSinUso=.t.
+ENDIF
+
+IF ALLTRIM(UPPER(Usuario))!="ADMIN" THEN
+	SELECT prmAcc
+	SET ORDER TO 3
+	GO TOP
+	SEEK(ALLTRIM(UPPER(Usuario)))
+	DO WHILE !EOF() .and. ALLTRIM(prmAcc.menusu)==ALLTRIM(Usuario)
+		IF DELETED() THEN
+			SKIP
+			LOOP
+		ENDIF
+		
+		IF ALLTRIM(UPPER(prmAcc.MenuAr))==ALLTRIM(UPPER(vpFormulario))
+			IF VAL(prmAcc.MenIve)>=1 THEN
+				vTienePermisoConsulta=.t.
+			ENDIF
+			IF VAL(prmAcc.MenIve)>=2 THEN
+				vTienePermisoIngresa=.t.
+			ENDIF
+			IF VAL(prmAcc.MenIve)>=3 THEN
+				vTienePermisoModifica=.t.
+			ENDIF
+			IF VAL(prmAcc.MenIve)=4 THEN
+				vTienePermisoTotal=.t.
+			ENDIF 		
+			EXIT
+		ENDIF
+		SELECT prmAcc
+		SKIP
+	ENDDO
+ELSE
+	STORE .T. TO vTienePermisoConsulta, vTienePermisoIngresa, vTienePermisoModifica, vTienePermisoTotal
+ENDIF
+
+IF vTablaSinUso THEN
+	SELECT prmAcc
+	USE
+ENDIF
+
+
+ENDPROC
+[END METHODS]
+[START RESERVED1]
+Class[END RESERVED1]
+[START RESERVED2]
+1[END RESERVED2]
+[START RESERVED3]
+*pextraepermisos 
+[END RESERVED3]
+[START RESERVED6]
+Pixels[END RESERVED6]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[OBJNAME] permisos
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3ZA10C7KA
+[CLASS] container
+[BASECLASS] container
+[OBJNAME] ctermometro
+[START PROPERTIES]
+Anchor = 15
+Width = 429
+Height = 31
+SpecialEffect = 1
+BorderColor = 0,0,128
+total = 0
+parcial = 0
+anchofinal = 0
+Name = "ctermometro"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE parcial_assign
+LPARAMETERS vNewVal
+*To do: Modify this routine for the Assign method
+THIS.Parcial = m.vNewVal
+
+IF This.Total>0 .and. This.AnchoFinal>0 THEN
+	This.Shape1.Width=(This.Parcial*This.AnchoFinal)/This.Total
+	This.Label1.Caption=ALLTRIM(STR(ROUND((This.Parcial*100)/This.Total,0)))+" %"
+	This.Label1.Left=This.Shape1.Width/2
+ENDIF
+ENDPROC
+PROCEDURE total_assign
+LPARAMETERS vNewVal
+*To do: Modify this routine for the Assign method
+THIS.Total = m.vNewVal
+
+ENDPROC
+[END METHODS]
+[START RESERVED1]
+Class[END RESERVED1]
+[START RESERVED2]
+3[END RESERVED2]
+[START RESERVED3]
+total
+parcial
+anchofinal
+*total_assign 
+*parcial_assign 
+[END RESERVED3]
+[START RESERVED6]
+Pixels[END RESERVED6]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3ZA10GDR5
+[CLASS] shape
+[BASECLASS] shape
+[OBJNAME] Shape1
+[PARENT] ctermometro
+[START PROPERTIES]
+Top = 2
+Left = 2
+Height = 28
+Width = 427
+Anchor = 15
+BackColor = 0,0,255
+BorderColor = 255,255,255
+Name = "Shape1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3ZA10Q8M8
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label1
+[PARENT] ctermometro
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+FontSize = 9
+Alignment = 2
+BackStyle = 0
+Caption = "0 %"
+Height = 17
+Left = 189
+Top = 8
+Width = 21
+ForeColor = 255,255,255
+Name = "Label1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[OBJNAME] ctermometro
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _42L0WCD7F
+[CLASS] custom
+[BASECLASS] custom
+[OBJNAME] analizaedocliente
+[START PROPERTIES]
+Name = "analizaedocliente"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE analizaedocliente
+LPARAMETERS vpRutCliente, vpFechaUltima
+
+STORE .t. TO vBndClientes, vBndCliPagos, vBndCliPago2, vBndCliDocto, vBndCliBlq, vBndAud001
+
+IF !USED("CLIENTES") THEN
+	vTablaSelec=StdVia+"CLIENTES.DBF"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("No es posible analizar el Estado del Cliente, Maestro de Clientes no encontrado")
+		RETURN .f.
+	ENDIF
+	
+	USE &vTablaSelec IN 0
+	
+	vBndClientes=.f.
+ENDIF
+
+IF !USED("CLIPAGOS") THEN
+	vTablaSelec=StdVia+"CLIPAGOS.DBF"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("No es posible analizar el Estado del Cliente, Maestro de Pagos no encontrado")
+		RETURN .f.
+	ENDIF
+	
+	USE &vTablaSelec IN 0
+	
+	vBndCliPagos=.f.
+ENDIF
+
+IF !USED("CLIPAGO2") THEN
+	vTablaSelec=StdVia+"CLIPAGO2.DBF"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("No es posible analizar el Estado del Cliente, Maestro de Pago Secundario no encontrado")
+		RETURN .f.
+	ENDIF
+	
+	USE &vTablaSelec IN 0
+	
+	vBndClipago2=.f.
+ENDIF
+
+IF !USED("CLIDOCTO") THEN
+	vTablaSelec=StdVia+"CLIDOCTO.DBF"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("No es posible analizar el Estado del Cliente, Historico de Ventas no encontrado")
+		RETURN .f.
+	ENDIF
+	
+	USE &vTablaSelec IN 0
+	
+	vBndCliDocto=.f.
+ENDIF
+
+IF !USED("CLIBLQ") THEN
+	vTablaSelec=StdVia+"CLIBLQ.DBF"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("No es posible analizar el Estado del Cliente, Maestro de Bloqueos no encontrado")
+		RETURN .f.
+	ENDIF
+	
+	USE &vTablaSelec IN 0
+	
+	vBndCliBlq=.f.
+ENDIF
+
+IF !USED("AUD001") THEN
+	vTablaSelec=StdVia+"AUD001.DBF"
+	
+	IF !FILE(vTablaSelec) THEN
+		=MESSAGEBOX("No es posible analizar el Estado del Cliente, Maestro de Auditorias de Cliente no encontrado")
+		RETURN .f.
+	ENDIF
+	
+	USE &vTablaSelec IN 0
+	
+	vBndAud001=.f.
+ENDIF
+
+SET ORDER TO 1 IN CliBlq
+IF SEEK(vpRutCliente, "CLIENTES",1)
+	vEstadoDocPendientes=This.pEstadoDoc(vpRutCliente, vpFechaUltima)
+	vNumeroBloqueosActivos=0
+	IF Clientes.Bloquea="S" THEN
+		IF SEEK(vpRutCliente, "CLIBLQ",1) THEN
+			DO WHILE !EOF("CLIBLQ") .and. CliBlq.CodCli=Clientes.clRut
+				IF DELETED("CLIBLQ") THEN
+					SKIP IN CliBlq
+					LOOP
+				ENDIF
+				
+				IF CliBlq.CodBlq=1 .and. CliBlq.EdoBlq THEN
+					IF !vEstadoDocPendientes THEN
+						Replace CliBlq.EdoBlq WITH .f., ;
+								CliBlq.FecDes WITH DATE(),;
+								CliBlq.HorDes WITH TIME(),;
+								CliBlq.UsrDes WITH Usuario IN CliBlq
+						CALCULATE MAX(Aud001.NroEve) TO vSigEvento IN Aud001
+						vSigEvento=vSigEvento+1
+						
+						INSERT INTO Aud001 VALUES (Clientes.clRut, 2, "Desbloqueo x Vencimiento de Documentos",;
+												   0, Usuario, DATE(), TIME(), 4, vSigEvento, "", "", SYS(0))				
+					ENDIF
+				ENDIF
+				
+				IF CliBlq.EdoBlq THEN
+					vNumeroBloqueosActivos=vNumeroBloqueosActivos+1
+				ENDIF
+				
+				SKIP IN CliBlq
+			ENDDO
+		ENDIF
+		IF vNumeroBloqueosActivos<=0 THEN
+			Replace Clientes.Bloquea WITH "N" IN Clientes
+			CALCULATE MAX(Aud001.NroEve) TO vSigEvento IN Aud001
+			vSigEvento=vSigEvento+1
+			INSERT INTO Aud001 VALUES (Clientes.clRut, 5, "Desbloqueo Estado Usuario - Sin Bloqueos Activos",;
+									   0, Usuario, DATE(), TIME(), 1, vSigEvento, "", "", SYS(0))			
+		ENDIF 		
+	ENDIF
+ELSE
+	=MESSAGEBOX("No se pudo verificar el Estado de los Documentos del Cliente")
+	RETURN .f.
+ENDIF 	
+
+IF !vBndClientes THEN
+	USE IN Clientes
+ENDIF
+
+IF !vBndCliPagos THEN
+	USE IN Clipagos
+ENDIF
+
+IF !vBndCliPago2 THEN
+	USE IN Clipago2
+ENDIF
+
+IF !vBndCliDocto THEN
+	USE IN CliDocto
+ENDIF
+
+IF !vBndCliBlq THEN
+	USE IN CliBlq
+ENDIF
+
+IF !vBndAud001 THEN
+	USE IN Aud001
+ENDIF
+
+ENDPROC
+PROCEDURE pestadodoc
+LPARAMETERS vpCliente, vpFechaLimite
+
+SET ORDER TO 5 IN CliDocto
+SET ORDER TO 1 IN CliPagos
+SET ORDER TO 2 IN Clipago2
+
+vDocumentosImpagos=0
+
+SELECT CliDocto
+SET NEAR ON
+SEEK(vpCliente)
+SET NEAR OFF
+
+DO WHILE !EOF("CLIDOCTO") .and. CliDocto.RutCli=vpCliente
+	IF DELETED("CLIDOCTO") THEN
+		SKIP IN CliDocto
+		LOOP
+	ENDIF
+	
+	IF !INLIST(Clidocto.tDocto, "FV", "BO", "OV", "EX") THEN
+		SKIP IN CliDocto
+		LOOP
+	ENDIF
+	
+	IF CliDocto.FecVen>=vpFechaLimite THEN
+		SKIP IN CliDocto
+		LOOP
+	ENDIF
+		
+	vMontoPagado=0
+	IF SEEK(CliDocto.tDocto+CliDocto.Numfac, "CLIPAGOS",1) THEN
+		DO WHILE !EOF("CLIPAGOS") .and. (Clipagos.tDocTo+CliPagos.NumFac)=(CliDocto.tDocto+CliDocto.Numfac)
+			IF DELETED("CLIPAGOS") THEN
+				SKIP IN Clipagos
+				LOOP
+			ENDIF
+			
+			vMontoPagado=vMontoPagado+ABS(Clipagos.ValDoc)
+			
+			SKIP IN Clipagos
+		ENDDO
+	ENDIF
+	
+	IF SEEK(CliDocto.tDocto+CliDocto.Numfac, "CLIPAGO2",2) THEN
+		DO WHILE !EOF("CLIPAGO2") .and. (Clipago2.tiFact+CliPago2.nuFact)=(CliDocto.tDocto+CliDocto.Numfac)
+			IF DELETED("CLIPAGO2") THEN
+				SKIP IN Clipago2
+				LOOP
+			ENDIF
+			
+			vMontoPagado=vMontoPagado+ABS(Clipago2.Abono)
+			
+			SKIP IN Clipago2
+		ENDDO
+	ENDIF
+	
+	IF vMontoPagado<CliDocto.Monto THEN
+		vDocumentosImpagos=vDocumentosImpagos+1
+	ENDIF
+	
+	SKIP IN CliDocto
+ENDDO
+
+IF vDocumentosImpagos>0 THEN
+	RETURN .t.
+ELSE
+	RETURN .f.
+ENDIF
+ENDPROC
+PROCEDURE recalculosaldo
+LPARAMETERS vpTipDoc, vpNumDoc, vpBodega, vpFechaDoc
+
+cLlaveDoc=vpTipDoc+vpNumDoc
+
+GO BOTTOM in CtrlPer
+
+vFechaInicial=CTOD("01/"+PADL(ALLTRIM(STR(MONTH(vpFechaDoc))),2,"0")+"/"+PADL(ALLTRIM(STR(YEAR(vpFechaDoc))),4,"0"))
+vFechaFinal=CTOD(PADL(ALLTRIM(STR(aMeses(CtrlPer.MesPer,2))),2,"0")+"/"+;
+				 PADL(ALLTRIM(STR(CtrlPer.MesPer)),2,"0")+"/"+;
+				 PADL(ALLTRIM(STR(CtrlPer.AnoPer)),4,"0"))
+
+vMesInicial	=MONTH(vFechainicial)
+vMesFinal	=MONTH(vFechaFinal)
+vAnoInicial	=YEAR(vFechaInicial)
+vAnoFinal	=YEAR(vFechaFinal)
+
+SET CLASSLIB TO cFacturador ALIAS "MiClase" ADDITIVE
+SET CLASSLIB TO MovimProd ALIAS "MiClase2" ADDITIVE
+
+oFacturador=CREATEOBJECT("miClase.Facturador")
+oMovimProd=CREATEOBJECT("miClase2.MovimProd")
+
+vMesProceso=vMesInicial
+vAnoProceso=vAnoInicial
+
+IF !oFacturador.mActivatablas(.f., vpFechaDoc,.f.,.t.) THEN
+	=MESSAGEBOX("No se pudo establecer conexion con las Tablas Periodicas")
+	RETURN .f.
+ENDIF
+
+SELECT deCodPro as CodPro ;
+	FROM tDetalle ;
+	WHERE (tDetalle.detDocTo+tDetalle.deNumFac)=cLlaveDoc .and. ;
+		  !DELETED("tDETALLE") .and. !EMPTY(ALLTRIM(tDetalle.deCodPro)) ;
+	INTO CURSOR cCodigosProducto
+USE IN tDetalle
+
+IF _Tally>0 THEN
+	GO TOP IN cCodigosProducto
+	DO WHILE !EOF("cCODIGOSPRODUCTO")
+		IF !SEEK(cCodigosProducto.CodPro, "PRODUCTO",1) THEN 	
+			WAIT WINDOW "El Producto con Codigo: "+ALLTRIM(cCodigosProducto.CodPro)+CHR(13)+;
+						"No se encuentra en el Maestro de Productos"
+			SKIP IN cCodigosProducto
+			LOOP
+		ELSE
+			IF Producto.ConSaldo!="S" THEN
+				SKIP IN cCodigosProducto
+				LOOP
+			ENDIF
+		ENDIF
+
+		vMesProceso=vMesInicial
+		vAnoProceso=vAnoInicial
+	
+		FOR vI=(vMesInicial+(vAnoInicial*12)) TO (vMesFinal+(vAnoFinal*12))
+			vFechaProceso=CTOD("01/"+PADL(ALLTRIM(STR(vMesProceso)),2,"0")+"/"+PADL(ALLTRIM(STR(vAnoProceso)),4,"0"))
+			IF !oFacturador.mActivatablas(.f., vFechaProceso,.t.,.t.,.t.,.t.,.t.,.t.) THEN
+				=MESSAGEBOX("No se pudo establecer conexion con las Tablas Periodicas")
+				RETURN .f.
+			ENDIF
+
+			IF !SEEK(vpBodega+cCODIGOSPRODUCTO.CodPro,"tSALDOS",1) THEN
+				=MESSAGEBOX("Error no existe producto en Tabla de Saldos")
+				RETURN .f.
+			ENDIF
+			
+			IF vI=(vMesInicial+(vAnoInicial*12)) THEN 					
+				vSaldoInicial	=tSaldos.Saldo
+				vSaldoInicialTMP=tSaldos.SaldoTmp
+				
+				vSaldoInicialFra	=tSaldos.SaldoFra
+				vSaldoInicialFraTMP	=tSaldos.SalFraTmp
+			ELSE
+				vSaldoInicial	=vSumaCantidad
+				vSaldoInicialTMP=vSumaCantidadTMP
+				
+				vSaldoInicialFra	=vSumaCantidadFra
+				vSaldoInicialFraTMP	=vSumaCantidadFraTMP
+			ENDIF
+			
+			STORE 0 TO sEntrada, sEntradaFra, sSalida, sSalidaFra, sSalidaTMP, sSalidaFraTMP
+			
+			SELECT CodPro, SUM(Entra) as SumEntra, SUM(EntraFra) as SumEntraFra, ;
+				   SUM(Sale) as SumSale, SUM(SaleFra) as SumSaleFra ;
+				FROM tMovim ;
+				WHERE CodPro=cCodigosProducto.CodPro .and. !DELETED("tMOVIM") .and. Bodega=vpBodega ;
+				GROUP BY CodPro ;
+				INTO CURSOR cResultado
+			
+			IF _Tally>0 THEN
+				SUM cResultado.SumEntra, cResultado.SumEntraFra, ;
+					cResultado.SumSale, cResultado.SumSaleFra TO sEntrada, sEntradaFra, sSalida, sSalidaFra
+			ENDIF
+
+			WITH oMovimProd
+				.Unidades=vSaldoInicial+(sEntrada-sSalida)
+				.Fracciones=vSaldoInicialFra+(sEntradaFra-sSalidaFra)
+				.UnixEnv=IIF(Producto.UnixEnv>0, Producto.UnixEnv,1)
+				
+				.pcUniFra()
+				
+				STORE .Unidades TO vSumaCantidad, vSumaCantidadTmp
+				STORE .Fracciones TO vSumaCantidadFra, vSumaCantidadFraTmp		
+
+				Replace tSaldos.SaldoFin WITH vSumaCantidad,;
+						tSaldos.SalFraFin WITH vSumaCantidadFra,;
+						tSaldos.SalFinTmp WITH vSumaCantidadTmp,;
+						tSaldos.SalFraFinT WITH vSumaCantidadFraTmp IN tSaldos
+				
+			ENDWITH
+			
+			USE IN cResultado
+			IF 	vI=(vMesFinal+(vAnoFinal*12)) THEN
+					SELECT Codigo , SUM(aCantidad) as SumSaleTMP, SUM(aFraccion) as SumSaleFraTMP, Bodega, edonve;
+						FROM tDetPed ;
+						LEFT JOIN tPedido ON (tPedido.Tipo+tPedido.Numero)=(tDetPed.Tipo+tDetPed.Numero) ;
+						WHERE Codigo=cCodigosProducto.CodPro .and. !DELETED("tDETPED") .and. ;
+							  tPedido.EdoNve .and. tPedido.Bodega=vpBodega ;
+						GROUP BY Codigo, Bodega, edonve ;
+						INTO CURSOR cResultado2
+				
+				IF _Tally>0 THEN
+					SUM cResultado2.SumSaleTMP, cResultado2.SumSaleFraTMP ;
+						TO sSalidaTMP, sSalidaFraTMP
+				ENDIF
+				
+				WITH oMovimProd
+					.Unidades=vSaldoInicialTMP+(sEntrada-sSalidaTMP)
+					.Fracciones=vSaldoInicialFraTMP+(sEntradaFra-sSalidaFraTMP)
+					.UnixEnv=IIF(Producto.UnixEnv>0, Producto.UnixEnv,1)
+					
+					.pcUniFra()
+					
+					STORE .Unidades TO  vSumaCantidadTmp
+					STORE .Fracciones TO vSumaCantidadFraTmp		
+
+					Replace tSaldos.SalFinTmp WITH vSumaCantidadTmp,;
+							tSaldos.SalFraFinT WITH vSumaCantidadFraTmp IN tSaldos
+					
+				ENDWITH
+				USE IN cResultado2
+			ENDIF
+			
+			IF (vMesProceso+1)>12 THEN
+				vMesProceso=1
+				vAnoProceso=vAnoProceso+1		
+			ELSE
+				vMesProceso=vMesProceso+1
+			ENDIF
+			oFacturador.mActivatablas(.t., vFechaProceso)
+		ENDFOR
+		Replace Producto.Saldo WITH vSumaCantidad, ;
+				Producto.SaldoTmp WITH vSumaCantidadTmp, ;
+				Producto.SaldoFrac WITH vSumaCantidadFra, ;
+				Producto.SalFraTmp WITH vSumaCantidadFraTmp IN Producto
+		
+		SKIP IN cCodigosProducto
+	ENDDO
+			
+	USE IN cCodigosProducto
+ENDIF
+
+RELEASE oFacturador, oMovimProd
+
+
+ENDPROC
+[END METHODS]
+[START RESERVED1]
+Class[END RESERVED1]
+[START RESERVED2]
+1[END RESERVED2]
+[START RESERVED3]
+*analizaedocliente 
+*pestadodoc 
+*recalculosaldo Clase que permite Recalcular el saldo de un producto desde un periodo especifico hasta el actual.
+[END RESERVED3]
+[START RESERVED6]
+Pixels[END RESERVED6]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[OBJNAME] analizaedocliente
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _4BN0LPTWI
+[CLASS] custom
+[BASECLASS] custom
+[OBJNAME] verificalibrosiva
+[START PROPERTIES]
+Name = "verificalibrosiva"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE pvalidarperiodo
+LPARAMETERS vpMes, vpGestion, vpOpcion, vpRetornaMensaje
+
+IF !USED("LIBVENTAS") THEN
+	RETURN .f.
+ENDIF
+
+SELECT IDEnvio, IDlSoft, IDTrack, FecEnv, EdoLib, TipoLib ;
+	FROM LibVentas ;
+	WHERE MesPer=vpMes .and. AnoPer=vpGestion ;
+	INTO CURSOR cLibros READWRITE
+
+STORE 0 TO vTotalPendiente, 	vTotalAceptado, 	vTotalRechazado, 	vTotalCuadra, ;
+		   vParcialPendiente, 	vParcialAceptado, 	vParcialRechazado, 	vParcialCuadra, ;
+		   vFinalPendiente, 	vFinalAceptado, 	vFinalRechazado, 	vFinalCuadra ;
+	
+GO TOP IN cLibros
+DO WHILE !EOF("cLIBROS")
+	*!*	Verificacion de Estado del Libro en Aplicacion Roberto
+	*
+	*
+	*
+
+	*!*	Fin Verificacion de Estado de Libro
+	DO CASE
+		CASE cLibros.TipoLib=1
+			DO CASE
+				CASE cLibros.EdoLib=0
+					vTotalPendiente=vTotalPendiente+1
+				CASE cLibros.EdoLib=1
+					vTotalAceptado=vTotalAceptado+1
+				CASE cLibros.EdoLib=2
+					vTotalCuadra=vTotalCuadra+1
+			OTHERWISE
+				vTotalRechazado=vTotalRechazado+1
+			ENDCASE
+		CASE cLibros.TipoLib=2
+			DO CASE
+				CASE cLibros.EdoLib=0
+					vParcialPendiente=vParcialPendiente+1
+				CASE cLibros.EdoLib=1
+					vParcialAceptado=vParcialAceptado+1
+				CASE cLibros.EdoLib=2
+					vParcialCuadra=vParcialCuadra+1
+			OTHERWISE
+				vParcialRechazado=vParcialRechazado+1
+			ENDCASE
+		CASE cLibros.TipoLib=3
+			DO CASE
+				CASE cLibros.EdoLib=0
+					vFinalPendiente=vFinalPendiente+1
+				CASE cLibros.EdoLib=1
+					vFinalAceptado=vFinalAceptado+1
+				CASE cLibros.EdoLib=2
+					vFinalCuadra=vFinalCuadra+1
+			OTHERWISE
+				vFinalRechazado=vFinalRechazado+1
+			ENDCASE
+	ENDCASE
+	
+	SKIP IN cLibros
+ENDDO
+
+USE IN cLibros
+
+DO CASE
+	CASE vpOpcion=1    &&& Total
+		IF (vParcialAceptado+vParcialPendiente+vParcialCuadra)>0 THEN
+			IF vpRetornaMensaje THEN
+				UNLOCK ALL
+				=MESSAGEBOX("No es posible el envio, Existen Envios PARCIALES registrados con Estado pendiente o Aceptado")
+			ENDIF
+			RETURN .f. 		
+		ENDIF
+		IF (vFinalAceptado+vFinalPendiente+vFinalCuadra)>0 THEN
+			IF vpRetornaMensaje THEN
+				UNLOCK ALL
+				=MESSAGEBOX("No es posible el envio, Existen Envios PARCIALES registrados con Estado pendiente o Aceptado")
+			ENDIF
+			RETURN .f. 		
+		ENDIF
+	CASE vpOpcion=2		&&& Parcial
+		IF (vTotalAceptado+vTotalPendiente+vTotalCuadra)>0 THEN
+			IF vpRetornaMensaje THEN
+				UNLOCK ALL
+				=MESSAGEBOX("No es posible el envio, Existen Envios TOTALES registrados con Estado pendiente o Aceptado")
+			ENDIF
+			RETURN .f. 		
+		ENDIF
+		
+		IF (vFinalAceptado+vFinalPendiente+vFinalCuadra)>0 THEN
+			IF vpRetornaMensaje THEN
+				UNLOCK ALL
+				=MESSAGEBOX("No es posible el envio, Existen Envios FINALES registrados con Estado pendiente o Aceptado")
+			ENDIF
+			RETURN .f. 		
+		ENDIF 		
+	CASE vpOpcion=3		&&& Final
+		IF (vTotalAceptado+vTotalPendiente+vTotalCuadra)>0 THEN
+			IF vpRetornaMensaje THEN
+				UNLOCK ALL
+				=MESSAGEBOX("No es posible el envio, Existen Envios TOTALES registrados con Estado pendiente o Aceptado")
+			ENDIF
+		
+			RETURN .f.
+		ENDIF
+		IF (vFinalAceptado+vFinalPendiente+vFinalCuadra)>0 THEN
+			IF vpRetornaMensaje THEN
+				UNLOCK ALL
+				=MESSAGEBOX("No es posible el envio, Existen Envios FINALES registrados con Estado pendiente o Aceptado")
+			ENDIF
+		
+			RETURN .f.
+		ENDIF
+		
+		IF vParcialCuadra=0 THEN
+			IF vpRetornaMensaje THEN
+				=MESSAGEBOX("No se puede enviar un LIBRO ELECTRONICO DE VENTAS IVA FINAL, sino existen Envios Parciales previos Cuadrados")
+			ENDIF
+			
+			RETURN .f.
+		ENDIF
+	CASE vpOpcion=4 .or. vpOpcion=5		&&& Ajuste o Reemplazo
+		IF (vTotalCuadra+vFinalCuadra)=0 THEN
+			IF vpRetornaMensaje THEN
+				=MESSAGEBOX("No se puede enviar una RECTIFICACION o REEMPLAZO sino se tiene Libros Totales o Finales Cuadrados")
+			ENDIF
+			
+			RETURN .f.
+		ENDIF 			
+ENDCASE
+
+RETURN .t.
+				
+ENDPROC
+[END METHODS]
+[START RESERVED1]
+Class[END RESERVED1]
+[START RESERVED2]
+1[END RESERVED2]
+[START RESERVED3]
+*pvalidarperiodo 
+[END RESERVED3]
+[START RESERVED6]
+Pixels[END RESERVED6]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[OBJNAME] verificalibrosiva
+[EOF]

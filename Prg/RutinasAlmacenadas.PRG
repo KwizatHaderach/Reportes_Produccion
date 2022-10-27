@@ -1,0 +1,37 @@
+PROCEDURE SalirPantallaPrincipal
+	IF VARTYPE(oFormularioPrincipal)="U" THEN 
+		RETURN .f.
+	ENDIF 
+
+	oFormularioPrincipal.Grid1.RecordSource=""
+
+	IF USED("REVCUR") THEN 
+		USE IN RevCur
+	ENDIF 
+
+	IF USED("SECPRODU") THEN 
+		USE IN SecProdu
+	ENDIF 
+
+	IF USED("UNIPRODU") THEN 
+		USE IN UniProdu
+	ENDIF 
+
+	IF USED("PRODUCTO") THEN 
+		USE IN Producto
+	ENDIF 
+
+	IF USED("COPOL") THEN 
+		USE IN Copol
+	ENDIF 
+
+	IF USED("COPOL_ING") THEN 
+		USE IN Copol_Ing
+	ENDIF 
+
+	IF USED("COPOL_SEC") THEN 
+		USE IN Copol_Sec
+	ENDIF 
+
+	oFormularioPrincipal.Text5.Value=""
+ENDPROC

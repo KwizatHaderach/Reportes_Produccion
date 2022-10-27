@@ -1,0 +1,36 @@
+CLOSE ALL
+CLEAR ALL
+
+stdVia="\\SERVERCOPOL\sisgen\datos\"
+
+vActualDirectorio=SYS(2003)
+
+SET DEFAULT TO &stdVia
+
+PUBLIC ARRAY aPeriodos(1,4)
+vResultadoScaneo=ADIR(aPeriodos,"DT*.dbf")
+
+IF vResultadoScaneo>0 THEN 
+	CREATE CURSOR cPeriodos (Mes c(2), Ano c(4), Orden n(10))
+	FOR vI=1 TO ALEN(aPeriodos,1)
+		vMes=PADL(SUBSTR(ALLTRIM(aPeriodos(vI,1)),3,2),2,"0")
+		vAno=PADL(SUBSTR(ALLTRIM(aPeriodos(vI,1)),5,4),4,"0")
+		
+		IF VAL(vMes)>0 THEN 
+			vOrden=VAL(Mes)+(VAL(vAno)*12)
+			INSERT INTO cPeriodos VALUES (vMes,vAno, vOrden)
+		ENDIF 
+	ENDFOR 
+ENDIF 
+IF USED("cPERIODOS") THEN 
+	SELECT cPeriodos	
+	INDEX on Orden TAG Enlace01
+	
+	GO TOP 
+	BROWSE 
+ENDIF 
+
+SET DEFAULT TO &vActualDirectorio
+
+CLOSE ALL
+CLEAR ALL

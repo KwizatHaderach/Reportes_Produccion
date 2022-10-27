@@ -1,0 +1,1397 @@
+SCCTEXT Version 4.0.0.2
+PLATFORM C(8,0),UNIQUEID C(10,0),TIMESTAMP N(10,0),CLASS M(4,0),CLASSLOC M(4,0),BASECLASS M(4,0),OBJNAME M(4,0),PARENT M(4,0),PROPERTIES M(4,0),PROTECTED M(4,0),METHODS M(4,0),OBJCODE M(4,0),OLE M(4,0),OLE2 M(4,0),RESERVED1 M(4,0),RESERVED2 M(4,0),RESERVED3 M(4,0),RESERVED4 M(4,0),RESERVED5 M(4,0),RESERVED6 M(4,0),RESERVED7 M(4,0),RESERVED8 M(4,0),USER M(4,0)
+1252
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] Screen    
+[START RESERVED1]
+VERSION =   3.00[END RESERVED1]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60ZJLDO
+[CLASS] dataenvironment
+[BASECLASS] dataenvironment
+[OBJNAME] Dataenvironment
+[START PROPERTIES]
+Top = 0
+Left = 0
+Width = 0
+Height = 0
+DataSource = .NULL.
+Name = "Dataenvironment"
+[END PROPERTIES]
+[START RESERVED2]
+1[END RESERVED2]
+[START RESERVED4]
+1[END RESERVED4]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60ZJLDP
+[CLASS] form
+[BASECLASS] form
+[OBJNAME] Form1
+[START PROPERTIES]
+Height = 521
+Width = 1136
+ShowWindow = 1
+DoCreate = .T.
+AutoCenter = .T.
+Caption = "Inventario General"
+MinButton = .F.
+Icon = ..\bmp\logoisstec.ico
+KeyPreview = .T.
+WindowType = 1
+parametros = .F.
+Name = "Form1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Destroy
+RELEASE vClaseFacturador, vClaseMovimiento
+ENDPROC
+PROCEDURE Init
+LPARAMETERS vpParametros, vpClaseFacturador, vpClaseMovimiento
+
+PUBLIC vClaseFacturador, vClaseMovimiento
+
+vClaseFacturador=vpClaseFacturador
+vClaseMovimiento=vpClaseMovimiento
+Thisform.Parametros=vpParametros
+
+
+
+
+*!*	TEXT TO vParametros TEXTMERGE NOSHOW FLAGS 2
+*!*	<Fecha><<DTOC(Thisform.Text1.Value)>></Fecha>
+*!*	<BndFiltros><<IIF(Thisform.Check5.Value, "true", "false")>></BndFiltros>
+*!*	<FiltroFamilia><<IIF(Thisform.Text4.Value>0, "true", "false")>></FiltroFamilia>
+*!*	<FiltroRubro><<IIF(Thisform.text2.Value>0, "true", "false")>></FiltroRubro>
+*!*	<Separador><<IIF(Thisform.Check4.Value, "true", "false")>></Separador>
+*!*	<TipoSeparador><<ALLTRIM(STR(Thisform.OptionGroup1.Value))>></TipoSeparador>
+*!*	<BndBodegaEspecifica><<IIF(Thisform.Check3.Value,"true", "false")>></BndBodegaEspecifica>
+*!*	<CodigoBodega><<IIF(Thisform.Combo1.Value>0, aBodegas(Thisform.Combo1.Value,2), "")>></CodigoBodega>
+*!*	<BndFiltroxSaldo><<IIF(Thisform.Check1.Value, "true", "false")>></BndFiltroxSaldo>
+*!*	<TipoSaldo><<ALLTRIM(STR(Thisform.Optiongroup2.Value))>></TipoSaldo>
+*!*	<BndDesactivado><<IIF(Thisform.Check2.Value,"true", "false")>></BndDesactivado>
+*!*	ENDTEXT
+
+PUBLIC ARRAY  aParametros(11)
+
+aParametros(1)=CTOD(STREXTRACT(Thisform.Parametros, "<Fecha>", "</Fecha>"))
+aParametros(2)=(STREXTRACT(Thisform.Parametros, "<BndFiltros>", "</BndFiltros>")="true")
+aParametros(3)=(STREXTRACT(Thisform.Parametros, "<FiltroFamilia>", "</FiltroFamilia>")="true")
+aParametros(4)=(STREXTRACT(Thisform.Parametros, "<FiltroRubro>", "</FiltroRubro>")="true")
+aParametros(5)=(STREXTRACT(Thisform.Parametros, "<Separador>", "</Separador>")="true")
+aParametros(6)=VAL(STREXTRACT(Thisform.Parametros, "<TipoSeparador>", "</TipoSeparador>"))
+aParametros(7)=(STREXTRACT(Thisform.Parametros, "<BndBodegaEspecifica>", "</BndBodegaEspecifica>")="true")
+aParametros(8)=STREXTRACT(Thisform.Parametros, "<CodigoBodega>", "</CodigoBodega>")
+aParametros(9)=(STREXTRACT(Thisform.Parametros, "<BndFiltroxSaldo>", "</BndFiltroxSaldo>")="true")
+aParametros(10)=VAL(STREXTRACT(Thisform.Parametros, "<TipoSaldo>", "</TipoSaldo>"))
+aParametros(11)=(STREXTRACT(Thisform.Parametros, "<BndDesactivado>", "</BndDesactivado>")="true")
+
+Thisform.ExtraerInformacion()
+
+Thisform.Text1.Value=aParametros(1)
+
+STORE aParametros(5) TO Thisform.Label3.Visible, Thisform.Text3.Visible
+	Thisform.Text3.Value=IIF(aParametros(6)=1, "Familias", "Rubros")
+
+STORE aParametros(2) TO Thisform.Label4.Visible, Thisform.Text4.Visible
+	Thisform.Text4.Value=IIF(aParametros(3), "Familias", "Rubros")
+
+STORE aParametros(7) TO Thisform.Label2.Visible, Thisform.Text2.Visible
+	Thisform.Text2.Value=aParametros(7)
+
+Thisform.WindowState= 2
+
+
+*!*	WITH Thisform
+*!*		.Text1.Value=vpFecha
+*!*		.Text2.Value=vpBodega
+*!*		.Text3.Value=vpDivision
+*!*		.Text4.Value=vpFiltro
+*!*	ENDWITH
+
+*!*	IF !USED("cINVCUR") THEN
+*!*		RETURN .f.
+*!*	ENDIF
+
+*!*	SELECT cInvCur
+*!*	SUM ALL cInvCur.Unidad+(cInvCur.Fraccion/IIF(cInvCur.UnixEnv=0, 1, cInvCur.UnixEnv)) TO Thisform.Text5.Value
+
+*!*	GO TOP IN cInvCur
+
+*!*	WITH Thisform.Grid1
+*!*		.RecordSource="cINVCUR"
+*!*		FOR vI=1 TO .ColumnCount
+*!*			.Columns(vI).ControlSource=FIELD(vI, "cINVCUR")
+*!*			.Columns(vI).DynamicFontbold="IIF(VAL(cInvCur.Tipo)=0,.t.,.f.)"
+*!*			IF vI=1 .or. vI=2 THEN
+*!*				.Columns(vI).DynamicBackColor="IIF(VAL(cInvCur.Tipo)=0,RGB(0,64,128),RGB(255,255,255))"
+*!*				.Columns(vI).DynamicForeColor="IIF(VAL(cInvCur.Tipo)=0,RGB(255,255,255),RGB(0,0,0))"
+*!*			ENDIF 		
+*!*		ENDFOR
+*!*	ENDWITH
+
+*!*	Thisform.WindowState=2
+
+*!*	WITH Thisform.Busqueda
+*!*		.BaseSelec="cINVCUR"
+*!*		.IniCampo=1
+*!*		.NumeroCampos=2
+*!*	ENDWITH
+
+*!*	WITH Thisform.Exportaexcelbarra1
+*!*		.TablaExportacion="cInvCur"
+*!*		.Titulo="Inventario General"
+*!*		.LineaSecundaria=""
+*!*		.LineaTerciaria=""
+*!*		.FiltroPrimario=""
+*!*		.FiltroSecundario=""
+*!*		.FechaInicial=Thisform.Text1.Value
+*!*		.FechaFinal={//}
+*!*		
+*!*		SELECT InvCur
+*!*		FOR vI=1 TO 12
+*!*			PUBLIC ARRAY aArregloCabecera (vI,3)
+*!*			DO CASE
+*!*				CASE vI=1
+*!*					aArregloCabecera[vI,1]="Codigo"
+*!*					aArregloCabecera[vI,2]=11
+*!*					aArregloCabecera[vI,3]="C"
+*!*				CASE vI=2
+*!*					aArregloCabecera[vI,1]="Detalle"
+*!*					aArregloCabecera[vI,2]=45
+*!*					aArregloCabecera[vI,3]="C"
+*!*				CASE vI=3
+*!*					aArregloCabecera[vI,1]="UN"
+*!*					aArregloCabecera[vI,2]=6
+*!*					aArregloCabecera[vI,3]="C"
+*!*				CASE vI=4
+*!*					aArregloCabecera[vI,1]="UnixEnv"
+*!*					aArregloCabecera[vI,2]=8
+*!*					aArregloCabecera[vI,3]="N"
+*!*				CASE vI=5
+*!*					aArregloCabecera[vI,1]="Cantidad"
+*!*					aArregloCabecera[vI,2]=11
+*!*					aArregloCabecera[vI,3]="N"
+*!*				CASE vI=6
+*!*					aArregloCabecera[vI,1]="Fraccion"
+*!*					aArregloCabecera[vI,2]=11
+*!*					aArregloCabecera[vI,3]="N"
+*!*				CASE vI=7
+*!*					aArregloCabecera[vI,1]="Can.Tmp"
+*!*					aArregloCabecera[vI,2]=11
+*!*					aArregloCabecera[vI,3]="N"
+*!*				CASE vI=8
+*!*					aArregloCabecera[vI,1]="FraTmp"
+*!*					aArregloCabecera[vI,2]=11
+*!*					aArregloCabecera[vI,3]="N"
+*!*				CASE vI=9
+*!*					aArregloCabecera[vI,1]="Precio-1"
+*!*					aArregloCabecera[vI,2]=11
+*!*					aArregloCabecera[vI,3]="N"
+*!*				CASE vI=10
+*!*					aArregloCabecera[vI,1]="Precio-2"
+*!*					aArregloCabecera[vI,2]=11
+*!*					aArregloCabecera[vI,3]="N"
+*!*				CASE vI=11
+*!*					aArregloCabecera[vI,1]="Precio-3"
+*!*					aArregloCabecera[vI,2]=11
+*!*					aArregloCabecera[vI,3]="N"
+*!*				CASE vI=12
+*!*					aArregloCabecera[vI,1]="Pre.Costo"
+*!*					aArregloCabecera[vI,2]=11
+*!*					aArregloCabecera[vI,3]="N"
+*!*			ENDCASE
+*!*		ENDFOR
+*!*	ENDWITH
+ENDPROC
+PROCEDURE KeyPress
+LPARAMETERS nKeyCode, nShiftAltCtrl
+IF nKeyCode=27 THEN
+	Thisform.Release
+ENDIF
+IF nKeyCode=70 THEN
+	Thisform.Busqueda.pBusqueda(1)
+	Thisform.Grid1.SetFocus
+ENDIF
+
+IF nKeyCode=71 then
+	Thisform.Busqueda.pBusqueda(2)
+	Thisform.Grid1.SetFocus
+ENDIF
+
+
+ENDPROC
+PROCEDURE extraerinformacion
+TEXT TO vTablasPeriodicas TEXTMERGE NOSHOW FLAGS 2
+<FechaProceso><<DTOC(aParametros(1))>></FechaProceso>
+<CierreInicial>false</CierreInicial>
+<SD>true</SD>
+<DT>true</DT>
+<P1>true</P1>
+<P2>true</P2>
+ENDTEXT
+
+IF !vClaseFacturador.mActivaTablas_2(vTablasPeriodicas) THEN
+	=MESSAGEBOX("No se encontro las Tablas Periodicas")
+	RETURN .f.
+ENDIF
+
+IF aParametros(11) THEN
+	SELECT prCodigo, prDescrip, prUniMed, UnixEnv, ;
+		   0000000000 as CanRea, 0000000000 as FraRea, ;
+		   0000000000 as CanTmp, 0000000000 as FraTmp, ;
+		   preCom, Prec1, Prec2, Prec3, Secuencia, ;
+		   prFamilia, Rubro, "1" as Nivel, ;
+		   SPACE(25) as DetFam, SPACE(25) as DetRubro, EdoPro ;
+		FROM Producto ;
+		WHERE Fecha<aParametros(1) ;
+		INTO CURSOR cInventario READWRITE
+ELSE
+	SELECT prCodigo, prDescrip, prUniMed, UnixEnv, ;
+		   0000000000 as CanRea, 0000000000 as FraRea, ;
+		   0000000000 as CanTmp, 0000000000 as FraTmp, ;
+		   preCom, Prec1, Prec2, Prec3, Secuencia, ;
+		   prFamilia, Rubro, "1" as Nivel, ;
+		   SPACE(25) as DetFam, SPACE(25) as DetRubro, EdoPro ;
+		FROM Producto ;
+		WHERE Fecha<aParametros(1) .and. EdoPro="S";
+		INTO CURSOR cInventario READWRITE
+ENDIF
+
+***** Aplica Filtro de Productos con Filtro x Familia o Rubro
+IF aParametros(2) THEN
+	IF aParametros(3) THEN
+		DELETE FROM cInventario WHERE prFamilia NOT IN (SELECT Codigo FROM FamCur WHERE Sel)
+	ENDIF
+	
+	IF aParametros(4) THEN
+		DELETE FROM cInventario WHERE Rubro NOT IN (SELECT Codigo FROM RubroCur WHERE Sel)
+	ENDIF
+ENDIF
+
+***** Actualiza Inventario con el detalle de las familias
+
+UPDATE cInventario SET DetFam=faDescrip ;
+	FROM faProduc ;
+	WHERE prFamilia=faCodigo
+
+UPDATE cInventario SET DetRubro=ruDescri ;
+	FROM ruProduc ;
+	WHERE Rubro=ruCodigo
+
+
+
+IF aParametros(7) THEN
+	SELECT CodPro, SUM(Entra) as Entradas, SUM(EntraFra) as EntraFra, ;
+				   SUM(Sale) as Salidas, SUM(SaleFra) as SaleFra ;
+		FROM tMovim ;
+		WHERE Fecha<=aParametros(1) .and. Bodega=aParametros(8);
+		GROUP BY CodPro, Bodega ;
+		INTO CURSOR cMovimientos READWRITE
+		
+	SELECT CodPro, SUM(Saldo) as Saldo, SUM(SaldoFra) as SaldoFra, ;
+				   SUM(SaldoTMP) as SaldoTMP, SUM(SalFraTMP) as SalFraTMP ;
+		FROM tSaldos ;
+		WHERE Bodega=aParametros(8) ;
+		GROUP BY CodPro, Bodega ;
+		INTO CURSOR cSaldos READWRITE 	
+ELSE
+	SELECT CodPro, SUM(Entra) as Entradas, SUM(EntraFra) as EntraFra, ;
+				   SUM(Sale) as Salidas, SUM(SaleFra) as SaleFra ;
+		FROM tMovim ;
+		WHERE Fecha<=aParametros(1) ;
+		GROUP BY CodPro, Bodega ;
+		INTO CURSOR cMovimientos READWRITE
+
+	SELECT CodPro, SUM(Saldo) as Saldo, SUM(SaldoFra) as SaldoFra, ;
+				   SUM(SaldoTMP) as SaldoTMP, SUM(SalFraTMP) as SalFraTMP ;
+		FROM tSaldos ;
+		GROUP BY CodPro, Bodega ;
+		INTO CURSOR cSaldos READWRITE
+ENDIF
+
+SELECT Tipo, Numero ;
+	FROM tPedido ;
+	WHERE Fecha<aParametros(1) .and. EdoNVE .and. EMPTY(ALLTRIM(Prefactura));
+	INTO CURSOR cPedPend READWRITE
+
+SELECT Codigo, SUM(aCantidad) as Cantidad, SUM(aFraccion) as Fraccion ;
+	FROM tDetPed ;
+	WHERE (Tipo+Numero) IN (SELECT Tipo+Numero FROM cPedPend) ;
+	INTO CURSOR cProdPend READWRITE
+	
+DELETE FROM cMovimientos WHERE CodPro NOT IN (Selec prCodigo FROM cInventario)
+DELETE FROM cSaldos WHERE CodPro NOT IN (Selec prCodigo FROM cInventario)
+DELETE FROM cProdPend WHERE Codigo NOT IN (Selec prCodigo FROM cInventario)
+
+UPDATE cInventario SET CanRea=CanRea+ABS(Saldo), ;
+					   FraRea=FraRea+ABS(SaldoFra), ;
+					   CanTmp=CanTmp+ABS(SaldoTMP), ;
+					   FraTmp=FraTmp+ABS(SalFraTMP) ;
+	FROM cSaldos ;
+	WHERE prCodigo=CodPro
+
+UPDATE cInventario SET CanRea=CanRea+ABS(Entradas)-ABS(Salidas), ;
+					   FraRea=FraRea+ABS(EntraFra)-ABS(SaleFra), ;
+					   CanTmp=CanTmp+ABS(Entradas)-ABS(Salidas), ;
+					   FraTmp=FraTmp+ABS(EntraFra)-ABS(SaleFra) ;
+	FROM cMovimientos ;
+	WHERE prCodigo=CodPro
+
+UPDATE cInventario SET CanTmp=CanTmp-ABS(Cantidad), ;
+					   FraTmp=FraTmp-ABS(Fraccion) ;
+	FROM cProdPend ;
+	WHERE prCodigo=Codigo
+
+USE IN cProdPend
+USE IN cMovimientos
+USE IN cSaldos
+
+GO TOP IN cInventario
+DO WHILE !EOF("cINVENTARIO")
+	WITH vClaseMovimiento
+		***** Normalizando los Saldos Reales
+		.Unidades=cInventario.CanRea
+		.Fracciones=cInventario.FraRea
+		.UnixEnv=IIF(SEEK(cInventario.prCodigo, "PRODUCTO",1),IIF(Producto.UnixEnv<=0,1,Producto.UnixEnv),1)
+
+		.pcUniFra()
+		
+		Replace CanRea WITH .Unidades, ;
+				FraRea WITH .Fracciones IN cInventario
+
+		***** Normalizando los Saldos Temporales
+		.Unidades=cInventario.CanTmp
+		.Fracciones=cInventario.FraTmp
+		.UnixEnv=IIF(SEEK(cInventario.prCodigo, "PRODUCTO",1),IIF(Producto.UnixEnv<=0,1,Producto.UnixEnv),1)
+
+		.pcUniFra()
+		
+		Replace CanTmp WITH .Unidades, ;
+				FraTmp WITH .Fracciones IN cInventario
+		
+	ENDWITH
+	
+	SKIP IN cInventario
+ENDDO
+
+*!*	aParametros(1)=CTOD(STREXTRACT(Thisform.Parametros, "<Fecha>", "</Fecha>"))
+*!*	aParametros(2)=(STREXTRACT(Thisform.Parametros, "<BndFiltros>", "</BndFiltros>")="true")
+*!*	aParametros(3)=(STREXTRACT(Thisform.Parametros, "<FiltroFamilia>", "</FiltroFamilia>")="true")
+*!*	aParametros(4)=(STREXTRACT(Thisform.Parametros, "<FiltroRubro>", "</FiltroRubro>")="true")
+*!*	aParametros(5)=(STREXTRACT(Thisform.Parametros, "<Separador>", "</Separador>")="true")
+*!*	aParametros(6)=VAL(STREXTRACT(Thisform.Parametros, "<TipoSeparador>", "</TipoSeparador>"))
+*!*	aParametros(7)=(STREXTRACT(Thisform.Parametros, "<BndBodegaEspecifica>", "</BndBodegaEspecifica>")="true")
+*!*	aParametros(8)=STREXTRACT(Thisform.Parametros, "<CodigoBodega>", "</CodigoBodega>")
+*!*	aParametros(9)=(STREXTRACT(Thisform.Parametros, "<BndFiltroxSaldo>", "</BndFiltroxSaldo>")="true")
+*!*	aParametros(10)=VAL(STREXTRACT(Thisform.Parametros, "<TipoSaldo", "</TipoSaldo"))
+*!*	aParametros(11)=(STREXTRACT(Thisform.Parametros, "<BndDesactivado>", "</BndDesactivado>")="true")
+
+IF aParametros(9) THEN
+	DO CASE
+		CASE aParametros(10)=1
+			DELETE FROM cInventario WHERE (CanRea+FraRea)<=0
+		CASE aParametros(10)=2
+			DELETE FROM cInventario WHERE (CanRea+FraRea)>=0
+		CASE aParametros(10)=3
+			DELETE FROM cInventario WHERE (CanRea+FraRea)!=0
+	ENDCASE 		
+ENDIF
+
+IF aParametros(5) THEN
+	IF aParametros(6)=1 THEN
+		INSERT INTO cInventario (prDescrip, prFamilia, Nivel) ;
+			SELECT ALLTRIM(prFamilia)+" - "+ALLTRIM(DetFam), prFamilia, "0" ;
+				FROM cInventario ;
+				GROUP BY prFamilia
+		SELECT cInventario
+		INDEX on prFamilia+Nivel TAG Enlace001
+	ENDIF
+	IF aParametros(6)=2 THEN
+		INSERT INTO cInventario (prDescrip, Rubro, Nivel) ;
+			SELECT ALLTRIM(Rubro)+" - "+ALLTRIM(DetRubro), Rubro, "0" ;
+				FROM cInventario ;
+				GROUP BY Rubro
+		SELECT cInventario
+		INDEX on Rubro+Nivel TAG Enlace001
+	ENDIF
+ENDIF
+CALCULATE SUM(CanRea+(FraRea/UnixEnv)) TO Thisform.Text5.Value FOR VAL(Nivel)=1 IN cInventario
+Thisform.InventarioVisual(1)		
+ENDPROC
+PROCEDURE inventariovisual
+LPARAMETERS vpOpcion
+
+Thisform.Grid1.RecordSource=""
+
+IF USED("cVISUALINVENTARIO") THEN
+	USE IN cVisualInventario
+ENDIF
+
+IF aParametros(5) THEN
+	IF aParametros(6)=1 THEN
+		IF vpOpcion=1 THEN
+			SELECT *, prFamilia+Nivel+prCodigo as Orden ;
+				FROM cInventario ;
+				ORDER BY Orden ;
+				INTO CURSOR cVisualInventario
+		ELSE
+			SELECT *, prFamilia+Nivel+STR(Secuencia,4) as Orden ;
+				FROM cInventario ;
+				ORDER BY Orden ;
+				INTO CURSOR cVisualInventario
+		ENDIF
+	ELSE
+		IF vpOpcion=1 THEN
+			SELECT *, rubro+Nivel+prCodigo as Orden ;
+				FROM cInventario ;
+				ORDER BY Orden ;
+				INTO CURSOR cVisualInventario
+		ELSE
+			SELECT *, rubro+Nivel+STR(Secuencia,4) as Orden ;
+				FROM cInventario ;
+				ORDER BY Orden ;
+				INTO CURSOR cVisualInventario
+		ENDIF
+	ENDIF 		
+ELSE
+	IF vpOpcion=1 THEN
+		SELECT * ;
+			FROM cInventario ;
+			ORDER BY prCodigo ;
+			INTO CURSOR cVisualInventario
+	ELSE
+		SELECT * ;
+			FROM cInventario ;
+			ORDER BY Secuencia ;
+			INTO CURSOR cVisualInventario
+	ENDIF 	
+ENDIF
+
+GO TOP IN cVisualInventario
+
+WITH Thisform.Grid1
+	.RecordSource="cVISUALINVENTARIO"
+	FOR vI=1 TO .ColumnCount
+		.Columns(vI).ControlSource=FIELD(vI,"cVISUALINVENTARIO")
+		.Columns(vI).DynamicFontBold="IIF(VAL(cVisualInventario.Nivel)=0,.t.,.f.)"
+		.Columns(vI).DynamicForeColor="IIF(cVisualInventario.EdoPro!='S',RGB(255,0,0), RGB(0,0,0))"
+	ENDFOR
+ENDWITH
+
+WITH Thisform.Busqueda
+	.BaseSelec="cVISUALINVENTARIO"
+	.IniCampo=1
+	.NumeroCampos=2
+ENDWITH
+ENDPROC
+[END METHODS]
+[START RESERVED3]
+parametros
+*extraerinformacion 
+*inventariovisual 
+[END RESERVED3]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60ZJLDO
+[CLASS] exportaexcelbarra
+[CLASSLOC] ..\clases\cexportacion.vcx
+[BASECLASS] container
+[OBJNAME] Exportaexcelbarra1
+[PARENT] Form1
+[START PROPERTIES]
+Anchor = 12
+Top = 426
+Left = 844
+Width = 278
+Height = 69
+Name = "Exportaexcelbarra1"
+Command1.Top = 3
+Command1.Left = 236
+Command1.Height = 40
+Command1.Width = 38
+Command1.Picture = ..\bmp\icono excel.png
+Command1.Name = "Command1"
+Container1.Shape1.Name = "Shape1"
+Container1.Top = 44
+Container1.Left = 2
+Container1.Width = 232
+Container1.Height = 16
+Container1.Name = "Container1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60ZJLDO
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label1
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+BackStyle = 0
+Caption = "A fecha: "
+Height = 17
+Left = 15
+Top = 23
+Width = 51
+Name = "Label1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60ZJLDP
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1
+[START PROPERTIES]
+FontSize = 8
+Enabled = .F.
+Format = "D"
+Height = 23
+Left = 71
+Top = 18
+Width = 80
+DisabledForeColor = 1,0,0
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I610N6MW
+[CLASS] commandbutton
+[BASECLASS] commandbutton
+[OBJNAME] Command1
+[PARENT] Form1
+[START PROPERTIES]
+Top = 358
+Left = 1081
+Height = 32
+Width = 31
+FontName = "Arial Black"
+FontSize = 11
+Anchor = 12
+Picture = ..\bmp\preview.bmp
+Caption = ""
+TabIndex = 4
+PicturePosition = 1
+ForeColor = 0,0,160
+Name = "Command1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+vFecha=Thisform.Text1.Value
+vDivision=Thisform.Text3.Value
+vFiltro=Thisform.Text4.Value
+vBodega=Thisform.Text2.Value
+
+SELECT cVisualInventario
+GO TOP IN cVisualInventario
+REPORT FORM "g:\Desarrollo\IsstecErp\Report\rInventarioGeneral-a.frx" PREVIEW NOCONSOLE
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I610N6MY
+[CLASS] commandbutton
+[BASECLASS] commandbutton
+[OBJNAME] Command3
+[PARENT] Form1
+[START PROPERTIES]
+Top = 389
+Left = 1081
+Height = 32
+Width = 31
+FontName = "Arial Black"
+FontSize = 11
+Anchor = 12
+Picture = ..\bmp\print.bmp
+Caption = ""
+TabIndex = 5
+ToolTipText = "Para imprimir clientes por zona digite código de zona en el campo correspondiente y después haga un clic en la celda Imprimir"
+PicturePosition = 1
+ForeColor = 0,0,160
+Name = "Command3"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+vFecha=Thisform.Text1.Value
+vDivision=Thisform.Text3.Value
+vFiltro=Thisform.Text4.Value
+vBodega=Thisform.Text2.Value
+
+SELECT cVisualInventario
+GO TOP IN cVisualInventario
+REPORT FORM rInventarioGeneral-a.frx TO PRINTER PROMPT NOCONSOLE
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60ZJLDO
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label2
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+BackStyle = 0
+Caption = "Bodega"
+Height = 17
+Left = 631
+Top = 23
+Width = 45
+Name = "Label2"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60ZJLDP
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text2
+[PARENT] Form1
+[START PROPERTIES]
+FontSize = 8
+Enabled = .F.
+Height = 23
+Left = 687
+Top = 18
+Width = 176
+DisabledForeColor = 1,0,0
+Name = "Text2"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60ZJLDO
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label3
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+BackStyle = 0
+Caption = "Division :"
+Height = 17
+Left = 161
+Top = 23
+Width = 52
+Name = "Label3"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60ZJLDP
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text3
+[PARENT] Form1
+[START PROPERTIES]
+FontSize = 8
+Enabled = .F.
+Height = 23
+Left = 221
+Top = 18
+Width = 176
+DisabledForeColor = 1,0,0
+Name = "Text3"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613CSSE
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label4
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+BackStyle = 0
+Caption = "Filtro:"
+Height = 17
+Left = 406
+Top = 23
+Width = 33
+Name = "Label4"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613CSSF
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text4
+[PARENT] Form1
+[START PROPERTIES]
+FontSize = 8
+Enabled = .F.
+Height = 23
+Left = 440
+Top = 18
+Width = 176
+DisabledForeColor = 1,0,0
+Name = "Text4"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODWX
+[CLASS] grid
+[BASECLASS] grid
+[OBJNAME] Grid1
+[PARENT] Form1
+[START PROPERTIES]
+ColumnCount = 13
+FontSize = 8
+Anchor = 15
+DeleteMark = .F.
+Height = 411
+Left = 12
+Panel = 1
+ReadOnly = .T.
+RecordSource = ""
+RowHeight = 17
+Top = 57
+Width = 1068
+GridLineColor = 221,221,221
+AllowCellSelection = .F.
+Name = "Grid1"
+Column1.FontSize = 8
+Column1.ColumnOrder = 1
+Column1.Width = 75
+Column1.ReadOnly = .T.
+Column1.Visible = .T.
+Column1.Name = "Column1"
+Column2.FontSize = 8
+Column2.ColumnOrder = 2
+Column2.Width = 389
+Column2.ReadOnly = .T.
+Column2.Visible = .T.
+Column2.Name = "Column2"
+Column3.FontSize = 8
+Column3.ColumnOrder = 3
+Column3.Width = 36
+Column3.ReadOnly = .T.
+Column3.Sparse = .F.
+Column3.Visible = .T.
+Column3.Name = "Column3"
+Column4.FontSize = 8
+Column4.ColumnOrder = 4
+Column4.Width = 42
+Column4.ReadOnly = .T.
+Column4.Sparse = .F.
+Column4.Visible = .T.
+Column4.Name = "Column4"
+Column5.FontSize = 8
+Column5.ColumnOrder = 5
+Column5.Width = 75
+Column5.ReadOnly = .T.
+Column5.Sparse = .F.
+Column5.Visible = .T.
+Column5.BackColor = 183,255,255
+Column5.Name = "Column5"
+Column6.FontSize = 8
+Column6.ColumnOrder = 6
+Column6.Width = 43
+Column6.ReadOnly = .T.
+Column6.Sparse = .F.
+Column6.Visible = .T.
+Column6.BackColor = 183,255,255
+Column6.Name = "Column6"
+Column7.FontSize = 8
+Column7.ColumnOrder = 7
+Column7.Width = 75
+Column7.ReadOnly = .T.
+Column7.Sparse = .F.
+Column7.Visible = .T.
+Column7.BackColor = 255,255,174
+Column7.Name = "Column7"
+Column8.FontSize = 8
+Column8.ColumnOrder = 8
+Column8.Width = 43
+Column8.ReadOnly = .T.
+Column8.Sparse = .F.
+Column8.Visible = .T.
+Column8.BackColor = 255,255,174
+Column8.Name = "Column8"
+Column9.FontSize = 8
+Column9.ColumnOrder = 10
+Column9.Width = 65
+Column9.ReadOnly = .T.
+Column9.Sparse = .F.
+Column9.Visible = .T.
+Column9.Name = "Column9"
+Column10.FontSize = 8
+Column10.ColumnOrder = 11
+Column10.Width = 75
+Column10.ReadOnly = .T.
+Column10.Sparse = .F.
+Column10.Visible = .T.
+Column10.Name = "Column10"
+Column11.FontSize = 8
+Column11.ColumnOrder = 12
+Column11.Width = 75
+Column11.ReadOnly = .T.
+Column11.Sparse = .F.
+Column11.Name = "Column11"
+Column12.FontSize = 8
+Column12.ColumnOrder = 9
+Column12.Width = 75
+Column12.ReadOnly = .T.
+Column12.Sparse = .F.
+Column12.Name = "Column12"
+Column13.FontSize = 8
+Column13.Width = 75
+Column13.ReadOnly = .T.
+Column13.Name = "Column13"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE KeyPress
+LPARAMETERS nKeyCode, nShiftAltCtrl
+
+IF nKeyCode=1 then
+	GO TOP IN InvCur
+	Thisform.Grid1.SetFocus
+ENDIF
+
+IF nKeyCode=6 then
+	GO BOTTOM in InvCur
+	Thisform.Grid1.SetFocus
+ENDIF
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODWY
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column1
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Codigo"
+Name = "Header1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE DblClick
+Thisform.InventarioVisual(1)		
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODWZ
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column1
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Margin = 0
+ReadOnly = .T.
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODX0
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column2
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Detalle"
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODX1
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column2
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Margin = 0
+ReadOnly = .T.
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODX2
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column3
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "U.M."
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODX3
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column3
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+BorderStyle = 0
+Margin = 0
+ReadOnly = .T.
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODX4
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column4
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "UnixEnv"
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODX5
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column4
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+BorderStyle = 0
+Format = "999,999,999"
+InputMask = "999,999,999"
+Margin = 0
+ReadOnly = .T.
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODX6
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column5
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Unidad"
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODX7
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column5
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Format = "Z"
+InputMask = "999,999,999.99"
+Margin = 0
+ReadOnly = .T.
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 183,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODX8
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column6
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Fr."
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODX9
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column6
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Format = "Z"
+InputMask = "999,999,999.99"
+Margin = 0
+ReadOnly = .T.
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 183,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODXA
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column7
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Uni.TMP."
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODXB
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column7
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Format = "Z"
+InputMask = "999,999,999.99"
+Margin = 0
+ReadOnly = .T.
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,174
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODXC
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column8
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Fr.TMP"
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODXD
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column8
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Format = "Z"
+InputMask = "999,999,999.99"
+Margin = 0
+ReadOnly = .T.
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,174
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODXE
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column9
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Prec1"
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODXF
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column9
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Format = "Z"
+InputMask = "999,999,999"
+Margin = 0
+ReadOnly = .T.
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODXG
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column10
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Prec2"
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I613ODXH
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column10
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Format = "Z"
+InputMask = "999,999,999"
+Margin = 0
+ReadOnly = .T.
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I6193R0X
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column11
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Prec3"
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I6193R0Y
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column11
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Format = "Z"
+InputMask = "999,999,999"
+Margin = 0
+Visible = .T.
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _40P0OPGVP
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column12
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Costo"
+Name = "Header1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _40P0OPGVQ
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column12
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Format = "Z"
+InputMask = "999,999,999"
+Margin = 0
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _4Z112X8LB
+[CLASS] header
+[BASECLASS] header
+[OBJNAME] Header1
+[PARENT] Form1.Grid1.Column13
+[START PROPERTIES]
+FontSize = 8
+Alignment = 2
+Caption = "Secuencia"
+Name = "Header1"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE DblClick
+Thisform.InventarioVisual(2)		
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _4Z112X8LC
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text1
+[PARENT] Form1.Grid1.Column13
+[START PROPERTIES]
+FontSize = 8
+BorderStyle = 0
+Margin = 0
+ForeColor = 0,0,0
+BackColor = 255,255,255
+Name = "Text1"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3V00LE922
+[CLASS] label
+[BASECLASS] label
+[OBJNAME] Label5
+[PARENT] Form1
+[START PROPERTIES]
+AutoSize = .T.
+FontBold = .T.
+Anchor = 4
+BackStyle = 0
+Caption = "Cantidad de Cajas en Reporte"
+Height = 17
+Left = 12
+Top = 480
+Width = 169
+Name = "Label5"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3V00LE92H
+[CLASS] textbox
+[BASECLASS] textbox
+[OBJNAME] Text5
+[PARENT] Form1
+[START PROPERTIES]
+FontSize = 8
+Anchor = 4
+Alignment = 3
+Value = 0
+Enabled = .F.
+Format = "Z"
+Height = 23
+InputMask = "999,999,999,999.99"
+Left = 186
+Top = 476
+Width = 121
+DisabledForeColor = 1,0,0
+Name = "Text5"
+[END PROPERTIES]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _3I60ZJLDO
+[CLASS] busqueda
+[CLASSLOC] ..\clases\utiles.vcx
+[BASECLASS] commandbutton
+[OBJNAME] Busqueda
+[PARENT] Form1
+[START PROPERTIES]
+Top = 56
+Left = 1080
+Height = 32
+Width = 31
+Anchor = 9
+Picture = ..\bmp\find.bmp
+Name = "Busqueda"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE Click
+Thisform.Busqueda.pBusqueda(1)
+Thisform.Grid1.SetFocus
+ENDPROC
+PROCEDURE KeyPress
+LPARAMETERS nKeyCode, nShiftAltCtrl
+
+ENDPROC
+[END METHODS]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[START PROPERTIES]
+Arial, 0, 9, 5, 15, 12, 32, 3, 0
+Arial, 0, 8, 5, 14, 11, 29, 3, 0
+Arial Black, 0, 11, 8, 22, 17, 28, 5, 0
+[END PROPERTIES]
+[EOF]

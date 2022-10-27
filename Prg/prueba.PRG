@@ -1,0 +1,1 @@
+IIF((Filas.Serie1!=0) .and. (Filas.Serie2!=0),2,IIF((Filas.Serie1=0) .and. (Filas.Serie2=0),0,1))

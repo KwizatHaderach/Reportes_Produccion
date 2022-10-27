@@ -1,0 +1,29 @@
+CLOSE ALL
+CLEAR ALL
+
+USE \\SERVERCOPOL\sisgen\datos\copol.DBF IN 0
+USE \\SERVERCOPOL\sisgen\datos\Producto.DBF IN 0
+
+SET DATE TO dmy
+SET CENTURY on
+
+vGestion=2016
+vFechaInicial={01/01/2016}
+vFechaFinal={31/05/2016}
+vFiltroProducto="BBS116"
+
+
+SELECT SPACE(4)+txt_Produc as Codigo, SPACE(8)+NVL(prDescrip, "(Desconocido)") as Detalle, ;
+	   SUM(IIF(prUniMed="KG",VAL(txt_Cantid),0)) as Peso, ;
+	   SUM(IIF(prUniMed!="KG",VAL(txt_Cantid),0)) as Cantidad, ;
+	   0000000000000000 as Costo, ;
+	   txt_Operad as Operador,  txt_Produc as CodPro, ;
+	   SPACE(35) as DetOpe, Copol.Fecha as Fecha, prUnimed as Unidad ;
+	FROM Copol  ;
+	LEFT JOIN Producto ON txt_Produc=prCodigo ;
+	WHERE  ALLTRIM(txt_Produc)=vFiltroProducto .and. !EMPTY(ALLTRIM(txt_Produc)) ;
+	GROUP BY txt_Operad, txt_Produc
+	
+*BETWEEN(Copol.Fecha, vFechaInicial, vFechaFinal) .and.
+CLOSE ALL
+CLEAR ALL

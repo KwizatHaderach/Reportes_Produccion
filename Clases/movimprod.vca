@@ -1,0 +1,1356 @@
+SCCTEXT Version 4.0.0.2
+PLATFORM C(8,0),UNIQUEID C(10,0),TIMESTAMP N(10,0),CLASS M(4,0),CLASSLOC M(4,0),BASECLASS M(4,0),OBJNAME M(4,0),PARENT M(4,0),PROPERTIES M(4,0),PROTECTED M(4,0),METHODS M(4,0),OBJCODE M(4,0),OLE M(4,0),OLE2 M(4,0),RESERVED1 M(4,0),RESERVED2 M(4,0),RESERVED3 M(4,0),RESERVED4 M(4,0),RESERVED5 M(4,0),RESERVED6 M(4,0),RESERVED7 M(4,0),RESERVED8 M(4,0),USER M(4,0)
+1252
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] Class     
+[START RESERVED1]
+VERSION =   3.00[END RESERVED1]
+
+[ RECORD]
+[PLATFORM] WINDOWS 
+[UNIQUEID] _39O0OJRIP
+[CLASS] custom
+[BASECLASS] custom
+[OBJNAME] movimprod
+[START PROPERTIES]
+unixenv =        20
+
+codpro = .F.
+codbod = .F.
+unidades = 0
+fracciones = 0
+fecha = .F.
+Name = "movimprod"
+[END PROPERTIES]
+[START METHODS]
+PROCEDURE actualizaglobales
+LPARAMETERS vpCursorDato
+
+SELECT CodPro as Codigo, SUM(SaldoFin) as SumSalFin, SUM(SalFraFin) as SumSalFraFin, ;
+	   SUM(SalFinTMP) as SumSalFinTMP, SUM(SalFraFinT) as SumSalFraFinT, ;
+	   IIF(ISNULL(Producto.UnixEnv),1, Producto.UnixEnv) as Envase ;
+	   FROM tSaldos ;
+	   LEFT JOIN Producto ON Producto.prCodigo=tSaldos.CodPro ;
+	   WHERE CodPro in (SELECT Codigo FROM &vpCursorDato) .and. !DELETED("tSALDOS");
+	   GROUP BY Codigo ;
+	   INTO CURSOR cGlobales
+
+IF _Tally>0 THEN
+	GO TOP IN cGlobales
+	DO WHILE !EOF("cGLOBALES")
+		WITH This
+			.UnixEnv		=cGlobales.Envase
+			
+			.Unidades		=cGlobales.SumSalFin
+			.Fracciones		=cGlobales.SumSalFraFin
+			
+			.pcUniFra()		
+
+			vUnidadesReales	=.Unidades
+			vFraccionesReales=.Fracciones
+			
+			.Unidades		=cGlobales.SumSalFinTMP
+			.Fracciones		=cGlobales.SumSalFraFinT
+			
+			.pcUniFra()
+			
+			vUnidadesTMP	=.Unidades
+			vFraccionesTMP	=.Fracciones
+			
+			UPDATE Producto SET Saldo		=vUnidadesReales, ;
+								SaldoFrac	=vFraccionesReales, ;
+								SaldoTMP	=vUnidadesTMP, ;
+								SalFraTMP	=vFraccionesTMP ;
+				WHERE Producto.prCodigo=cGlobales.Codigo
+		ENDWITH
+		
+		SKIP IN cGlobales
+	ENDDO
+ENDIF
+
+USE IN cGlobales
+ENDPROC
+PROCEDURE mdecrementasaldo
+LPARAMETERS vpBodegaDec, vpCodigoDec, vpCantidadDec, vpFraccionDec, vpUnixEnvDec
+
+IF SEEK(vpBodegaDec+vpCodigoDec, "tSALDOS",1) THEN
+	vSaldoFraccion=(tSaldos.SaldoFin*vpUnixEnvDec)+tSaldos.SalFraFin
+	vDemandaFraccion=(vpCantidadDec*vpUnixEnvDec)+vpFraccionDec
+	
+	WITH This
+		.Unidades	=0
+		.Fracciones	=vSaldoFraccion-vDemandaFraccion
+		.UnixEnv	=vpUnixEnvDec
+		
+		.pcUniFra()
+		
+		Replace tSaldos.SaldoFin WITH .Unidades, ;
+				tSaldos.SalFraFin WITH .Fracciones IN tSaldos
+	ENDWITH
+ELSE
+	WAIT WINDOW "El Producto "+vpCodigoDec+", no se encuentra en la tabla de Saldos, el decremento no ha sido pòsible"
+ENDIF
+
+IF SEEK(vpCodigoDec, "PRODUCTO",1) THEN
+	vSaldoFraccion=(Producto.Saldo*vpUnixEnvDec)+Producto.SaldoFrac
+	vDemandaFraccion=(vpCantidadDec*vpUnixEnvDec)+vpFraccionDec
+	
+	WITH This
+		.Unidades	=0
+		.Fracciones	=vSaldoFraccion-vDemandaFraccion
+		.UnixEnv	=Producto.UnixEnv
+		
+		.pcUniFra()
+		
+		Replace Producto.Saldo WITH .Unidades ,;
+				Producto.SaldoFrac WITH .Fracciones IN Producto
+	ENDWITH
+ELSE
+	WAIT WINDOW "El Producto "+vpCodigoDec+", no se encuentra en la tabla de Producto, el decremento no ha sido pòsible"
+ENDIF
+ENDPROC
+PROCEDURE pactualizasaldos
+LPARAMETERS vpTipoVerificacion, vpDireccionMovimiento, vpActualizaTemporales, vpActualizaReales, vpDevolucion
+
+IF USED("ERRORCUR") THEN
+	USE IN ErrorCur
+ENDIF
+
+CREATE  CURSOR ErrorCur (Codigo c(15), Detalle c(50), Cantidad n(10), Fraccion n(5), OBS c(100))
+
+SELECT Codigo, Detalle, SUM(Cantidad) as SumCan, SUM(Fraccion) as SumFra, Envase, Bodega, BodegaIN ;
+	FROM ItemCur ;
+	WHERE !DELETED("ITEMCUR") .and. (Cantidad+Fraccion)>0 .and. !EMPTY(ALLTRIM(Codigo)) ;
+	GROUP BY Codigo, Detalle ;
+	INTO CURSOR cItemCur
+
+GO TOP IN cItemCur
+DO WHILE !EOF("cITEMCUR")
+	IF DELETED("cITEMCUR") THEN
+		SKIP IN cItemCur
+		LOOP
+	ENDIF
+
+	vCantidadActual			=(cItemCur.SumCan*cItemCur.Envase)+cItemCur.SumFra
+
+	IF vpDireccionMovimiento THEN
+		IF !SEEK(cItemCur.BodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+			INSERT INTO ErrorCur VALUES ;
+				(cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA BODEGA SECUNDARIA EN TABLA DE SALDOS")
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+	ENDIF
+	
+	***** Validacion de existencia de productos
+	IF !SEEK(cItemCur.Bodega+cItemCur.Codigo, "tSALDOS",1) THEN
+		INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA EN TABLA DE SALDOS")
+		SKIP IN cItemCur
+		LOOP
+	ENDIF
+
+	IF !SEEK(cItemCur.Codigo, "PRODUCTO",1) THEN
+		INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA EN MAESTRO DE PRODUCTOS")
+		SKIP IN cItemCur
+		LOOP
+	ENDIF
+
+	vCantidadExistente			=(tSaldos.SaldoFin*Producto.UnixEnv)+tSaldos.SalFraFin
+	vCantidadExistenteTMP		=(tSaldos.SalFinTMP*Producto.UnixEnv)+tSaldos.SalFraFinT
+
+	vCantidadGBLExistente		=(Producto.Saldo*Producto.UnixEnv)+Producto.SaldoFrac
+	vCantidadGBLExistenteTMP	=(Producto.SaldoTMP*Producto.UnixEnv)+Producto.SalFraTMP
+	
+			
+	IF SEEK(vgTipoDoc, "TIPODOC",1) THEN
+		IF vpActualizaReales THEN
+			WITH This
+				*** Saldos x Bodega
+				.Unidades=0
+				IF !vpDevolucion THEN
+					IF TipoDoc.DirMov THEN
+						.Fracciones=vCantidadExistente-vCantidadActual
+					ELSE
+						.Fracciones=vCantidadExistente+vCantidadActual
+					ENDIF
+				ELSE
+					IF TipoDoc.DirMov THEN
+						.Fracciones=vCantidadExistente+vCantidadActual
+					ELSE
+						.Fracciones=vCantidadExistente-vCantidadActual
+					ENDIF
+				ENDIF 					
+				.UnixEnv=cItemCur.Envase
+				
+				.pcUniFra()
+				
+				Replace tSaldos.SaldoFin 	WITH .Unidades,;
+						tSaldos.SalFraFin 	WITH .Fracciones IN tSaldos
+			ENDWITH
+
+			****** Si es Transferencia entre Bodegas Se actualizara la Bodega Entrante (Real)
+			IF vpDireccionMovimiento THEN
+				IF SEEK(cItemCur.BodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+					vCantidadExistenteSec		=(tSaldos.SaldoFin*Producto.UnixEnv)+tSaldos.SalFraFin
+				
+					WITH This
+						*** Saldos x Bodega
+						.Unidades=0
+						IF !vpDevolucion THEN
+							IF TipoDoc.DirMov THEN
+								.Fracciones=vCantidadExistenteSec+vCantidadActual
+							ELSE
+								.Fracciones=vCantidadExistenteSec-vCantidadActual
+							ENDIF
+						ELSE
+							IF TipoDoc.DirMov THEN
+								.Fracciones=vCantidadExistenteSec-vCantidadActual
+							ELSE
+								.Fracciones=vCantidadExistenteSec+vCantidadActual
+							ENDIF
+						ENDIF 							
+
+*						.Fracciones=vCantidadExistenteSec-vCantidadActual
+						.UnixEnv=cItemCur.Envase
+						
+						.pcUniFra()
+						
+						Replace tSaldos.SaldoFin 	WITH .Unidades,;
+								tSaldos.SalFraFin 	WITH .Fracciones IN tSaldos
+					ENDWITH 			
+				ENDIF
+			ENDIF 							
+		ENDIF
+
+		IF !SEEK(cItemCur.Bodega+cItemCur.Codigo, "tSALDOS",1) THEN
+			=MESSAGEBOX("Error en ubicacion de Saldos Temporales")
+			RETURN .f.
+		ENDIF
+		
+		***** Actualizando Saldos Temporales (Parcial y Global)
+		IF vpActualizaTemporales THEN
+			WITH This
+				** Saldos x Bodega
+				.Unidades=0
+				IF !vpDevolucion THEN
+					IF TipoDoc.DirMov THEN
+						.Fracciones=vCantidadExistenteTMP-vCantidadActual
+					ELSE
+						.Fracciones=vCantidadExistenteTMP+vCantidadActual
+					ENDIF 				
+				ELSE
+					IF TipoDoc.DirMov THEN
+						.Fracciones=vCantidadExistenteTMP+vCantidadActual
+					ELSE
+						.Fracciones=vCantidadExistenteTMP-vCantidadActual
+					ENDIF 				
+				ENDIF
+									
+				.UnixEnv=cItemCur.Envase
+				
+				.pcUniFra()
+				
+				Replace tSaldos.SalFinTMP WITH .Unidades,;
+						tSaldos.SalFraFinT WITH .Fracciones IN tSaldos
+
+			ENDWITH 						
+			
+			****** Si es Transferencia entre Bodegas Se actualizara la Bodega Entrante (Temporal)
+			IF vpDireccionMovimiento THEN
+				IF SEEK(cItemCur.BodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+					vCantidadExistenteTMPSec	=(tSaldos.SalFinTMP*Producto.UnixEnv)+tSaldos.SalFraFinT
+					WITH This
+						*** Saldos x Bodega
+						.Unidades=0
+						IF !vpDevolucion THEN
+							IF TipoDoc.DirMov THEN
+								.Fracciones=vCantidadExistenteTMPSec+vCantidadActual
+							ELSE
+								.Fracciones=vCantidadExistenteTMPSec-vCantidadActual
+							ENDIF
+						ELSE
+							IF TipoDoc.DirMov THEN
+								.Fracciones=vCantidadExistenteTMPSec-vCantidadActual
+							ELSE
+								.Fracciones=vCantidadExistenteTMPSec+vCantidadActual
+							ENDIF
+						ENDIF
+*						.Fracciones=vCantidadExistenteTMPSec-vCantidadActual
+						.UnixEnv=cItemCur.Envase
+						
+						.pcUniFra()
+						
+						Replace tSaldos.SalFinTMP WITH .Unidades,;
+								tSaldos.SalFraFinT WITH .Fracciones IN tSaldos
+					ENDWITH 			
+				ENDIF
+			ENDIF 										
+		ENDIF 		
+	ELSE
+		INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - TIPO DE DOCUMENTO INVALIDO")
+		SKIP IN cItemCur
+		LOOP
+	ENDIF 		
+	
+	SKIP IN cItemCur
+ENDDO
+
+This.ActualizaGlobales("cItemCur")
+USE IN cItemCur
+
+IF RECCOUNT("ERRORCUR")>0 THEN
+	USE IN ErrorCur
+	RETURN .f.
+ELSE
+	USE IN ErrorCur
+	RETURN .t.
+ENDIF
+
+	
+
+		
+
+
+ENDPROC
+PROCEDURE pactualizasaldosdte
+LPARAMETERS vpCursorBase, vpTipoVerificacion, vpDireccionMovimiento, vpActualizaTemporales, ;
+			vpActualizaReales, vpDevolucion
+
+IF USED("ERRORCUR") THEN
+	USE IN ErrorCur
+ENDIF
+
+CREATE  CURSOR ErrorCur (Codigo c(15), Detalle c(50), Cantidad n(10), Fraccion n(5), OBS c(100))
+
+SELECT Codigo, SUM(Cantidad) as SumCan, SUM(Fraccion) as SumFra, Envase, Bodega, BodegaIN ;
+	FROM &vpCursorBase ;
+	WHERE !DELETED() .and. (Cantidad+Fraccion)>0 .and. !EMPTY(ALLTRIM(Codigo)) ;
+	GROUP BY Codigo, Detalle ;
+	INTO CURSOR cItemCur
+
+GO TOP IN cItemCur
+DO WHILE !EOF("cITEMCUR")
+	IF DELETED("cITEMCUR") THEN
+		SKIP IN cItemCur
+		LOOP
+	ENDIF
+
+	vCantidadActual			=(cItemCur.SumCan*cItemCur.Envase)+cItemCur.SumFra
+
+	IF vpDireccionMovimiento THEN
+		IF !SEEK(cItemCur.BodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+			INSERT INTO ErrorCur VALUES ;
+				(cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA BODEGA SECUNDARIA EN TABLA DE SALDOS")
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+	ENDIF
+	
+	***** Validacion de existencia de productos
+	IF !SEEK(cItemCur.Bodega+cItemCur.Codigo, "tSALDOS",1) THEN
+		INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA EN TABLA DE SALDOS")
+		SKIP IN cItemCur
+		LOOP
+	ENDIF
+
+	IF !SEEK(cItemCur.Codigo, "PRODUCTO",1) THEN
+		INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA EN MAESTRO DE PRODUCTOS")
+		SKIP IN cItemCur
+		LOOP
+	ENDIF
+
+	vCantidadExistente			=(tSaldos.SaldoFin*Producto.UnixEnv)+tSaldos.SalFraFin
+	vCantidadExistenteTMP		=(tSaldos.SalFinTMP*Producto.UnixEnv)+tSaldos.SalFraFinT
+
+	vCantidadGBLExistente		=(Producto.Saldo*Producto.UnixEnv)+Producto.SaldoFrac
+	vCantidadGBLExistenteTMP	=(Producto.SaldoTMP*Producto.UnixEnv)+Producto.SalFraTMP
+	
+			
+	IF SEEK(vgTipoDoc, "TIPODOC",1) THEN
+		IF vpActualizaReales THEN
+			WITH This
+				*** Saldos x Bodega
+				.Unidades=0
+				IF !vpDevolucion THEN
+					IF TipoDoc.DirMov THEN
+						.Fracciones=vCantidadExistente-vCantidadActual
+					ELSE
+						.Fracciones=vCantidadExistente+vCantidadActual
+					ENDIF
+				ELSE
+					IF TipoDoc.DirMov THEN
+						.Fracciones=vCantidadExistente+vCantidadActual
+					ELSE
+						.Fracciones=vCantidadExistente-vCantidadActual
+					ENDIF
+				ENDIF 					
+				.UnixEnv=cItemCur.Envase
+				
+				.pcUniFra()
+				
+				Replace tSaldos.SaldoFin 	WITH .Unidades,;
+						tSaldos.SalFraFin 	WITH .Fracciones IN tSaldos
+			ENDWITH
+
+			****** Si es Transferencia entre Bodegas Se actualizara la Bodega Entrante (Real)
+			IF vpDireccionMovimiento THEN
+				IF SEEK(cItemCur.BodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+					vCantidadExistenteSec		=(tSaldos.SaldoFin*Producto.UnixEnv)+tSaldos.SalFraFin
+				
+					WITH This
+						*** Saldos x Bodega
+						.Unidades=0
+						IF !vpDevolucion THEN
+							IF TipoDoc.DirMov THEN
+								.Fracciones=vCantidadExistenteSec+vCantidadActual
+							ELSE
+								.Fracciones=vCantidadExistenteSec-vCantidadActual
+							ENDIF
+						ELSE
+							IF TipoDoc.DirMov THEN
+								.Fracciones=vCantidadExistenteSec-vCantidadActual
+							ELSE
+								.Fracciones=vCantidadExistenteSec+vCantidadActual
+							ENDIF
+						ENDIF 							
+
+*						.Fracciones=vCantidadExistenteSec-vCantidadActual
+						.UnixEnv=cItemCur.Envase
+						
+						.pcUniFra()
+						
+						Replace tSaldos.SaldoFin 	WITH .Unidades,;
+								tSaldos.SalFraFin 	WITH .Fracciones IN tSaldos
+					ENDWITH 			
+				ENDIF
+			ENDIF 							
+		ENDIF
+
+		IF !SEEK(cItemCur.Bodega+cItemCur.Codigo, "tSALDOS",1) THEN
+			=MESSAGEBOX("Error en ubicacion de Saldos Temporales")
+			RETURN .f.
+		ENDIF
+		
+		***** Actualizando Saldos Temporales (Parcial y Global)
+		IF vpActualizaTemporales THEN
+			WITH This
+				** Saldos x Bodega
+				.Unidades=0
+				IF !vpDevolucion THEN
+					IF TipoDoc.DirMov THEN
+						.Fracciones=vCantidadExistenteTMP-vCantidadActual
+					ELSE
+						.Fracciones=vCantidadExistenteTMP+vCantidadActual
+					ENDIF 				
+				ELSE
+					IF TipoDoc.DirMov THEN
+						.Fracciones=vCantidadExistenteTMP+vCantidadActual
+					ELSE
+						.Fracciones=vCantidadExistenteTMP-vCantidadActual
+					ENDIF 				
+				ENDIF
+									
+				.UnixEnv=cItemCur.Envase
+				
+				.pcUniFra()
+				
+				Replace tSaldos.SalFinTMP WITH .Unidades,;
+						tSaldos.SalFraFinT WITH .Fracciones IN tSaldos
+
+			ENDWITH 						
+			
+			****** Si es Transferencia entre Bodegas Se actualizara la Bodega Entrante (Temporal)
+			IF vpDireccionMovimiento THEN
+				IF SEEK(cItemCur.BodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+					vCantidadExistenteTMPSec	=(tSaldos.SalFinTMP*Producto.UnixEnv)+tSaldos.SalFraFinT
+					WITH This
+						*** Saldos x Bodega
+						.Unidades=0
+						IF !vpDevolucion THEN
+							IF TipoDoc.DirMov THEN
+								.Fracciones=vCantidadExistenteTMPSec+vCantidadActual
+							ELSE
+								.Fracciones=vCantidadExistenteTMPSec-vCantidadActual
+							ENDIF
+						ELSE
+							IF TipoDoc.DirMov THEN
+								.Fracciones=vCantidadExistenteTMPSec-vCantidadActual
+							ELSE
+								.Fracciones=vCantidadExistenteTMPSec+vCantidadActual
+							ENDIF
+						ENDIF
+*						.Fracciones=vCantidadExistenteTMPSec-vCantidadActual
+						.UnixEnv=cItemCur.Envase
+						
+						.pcUniFra()
+						
+						Replace tSaldos.SalFinTMP WITH .Unidades,;
+								tSaldos.SalFraFinT WITH .Fracciones IN tSaldos
+					ENDWITH 			
+				ENDIF
+			ENDIF 										
+		ENDIF 		
+	ELSE
+		INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - TIPO DE DOCUMENTO INVALIDO")
+		SKIP IN cItemCur
+		LOOP
+	ENDIF 		
+	
+	SKIP IN cItemCur
+ENDDO
+
+This.ActualizaGlobales("cItemCur")
+USE IN cItemCur
+
+IF RECCOUNT("ERRORCUR")>0 THEN
+	USE IN ErrorCur
+	RETURN .f.
+ELSE
+	USE IN ErrorCur
+	RETURN .t.
+ENDIF
+
+	
+
+		
+
+
+ENDPROC
+PROCEDURE pcalculasalini
+STORE 0 TO cCantidades, cFracciones, This.Unidades, This.Fracciones, cPuntero
+STORE "" TO cAntOrder, cAntFilter
+IF USED("IniItem") THEN
+	SELECT IniItem
+	USE
+ENDIF
+
+vTablaSelec=StdVia+"SD"+PADL(ALLTRIM(STR(MONTH(This.Fecha))),2,"0")+PADL(ALLTRIM(STR(YEAR(This.Fecha))),4,"0")
+
+SELECT 0
+USE &vTablaSelec ALIAS IniItem
+
+IF USED("MovItem") THEN
+	SELECT MovItem
+	cAntOrder=ORDER()
+	cAntFilter=FILTER()
+	cPuntero=RECNO()
+ELSE		
+	vTablaSelec=StdVia+"DT"+PADL(ALLTRIM(STR(MONTH(This.Fecha))),2,"0")+PADL(ALLTRIM(STR(YEAR(This.Fecha))),4,"0")
+	SELECT 0
+	USE &vTablaSelec ALIAS MovItem
+ENDIF
+
+SELECT MovItem
+SET ORDER TO 10
+
+SELECT IniItem
+SET ORDER TO 1
+SEEK(This.CodBod+This.CodPro)
+IF FOUND() THEN
+	This.Unidades=IniItem.Saldo
+	This.Fracciones=IniItem.SaldoFra
+ENDIF
+
+cFechaInicial=CTOD("01/"+PADL(ALLTRIM(STR(MONTH(This.Fecha))),2,"0")+"/"+PADL(ALLTRIM(STR(YEAR(This.Fecha))),4,"0"))
+IF This.Fecha-cFechaInicial>0 then
+	FOR cDias=1 TO This.Fecha-cFechaInicial
+		cFechaProceso=cFechaInicial+cDias-1
+		
+		SELECT MovItem
+		*bodega+codpro+STR(YEAR(fecha),4)+STR(MONTH(fecha),2)+STR(DAY(fecha),2)		
+		SEEK(This.CodBod+This.CodPro+STR(YEAR(cFechaProceso),4)+STR(MONTH(cFechaProceso),2)+STR(DAY(cFechaProceso),2))
+		DO WHILE !EOF() .and. MovItem.Bodega=This.CodBod .and. MovItem.CodPro=This.CodPro .and. MovItem.Fecha=cFechaProceso
+			cCantidades=cCantidades+MovItem.Entra-MovItem.Sale
+			cFracciones=cFracciones+MovItem.EntraFra-MovItem.SaleFra
+			SELECT MovItem
+			SKIP
+		ENDDO
+	ENDFOR
+	This.Unidades=This.Unidades+cCantidades
+	This.Fracciones=This.Fracciones+cFracciones
+ENDIF
+
+IF USED("IniItem") then
+	SELECT IniItem
+	USE
+ENDIF
+
+This.pCUnifra()
+
+SELECT MovItem
+SET ORDER TO &cAntOrder
+SET FILTER TO &cAntFilter
+IF cPuntero>0 THEN
+	GO cPuntero
+ENDIF
+ENDPROC
+PROCEDURE pcunifra
+PRIVATE cUniFrac, cTotFrac, cUnidad, cFraccion
+
+STORE 0 TO cUniFrac, cTotFrac, cUnidad, cFraccion
+
+*IF TYPE(This.UnixEnv) # "N" THEN
+*	=MESSAGEBOX("Error en Valor de Unidades x Envase")
+*	RETURN .f.
+*ENDIF
+
+IF !(This.Unidades!=0 .or. This.Fracciones!=0) THEN
+	RETURN .f.
+ENDIF
+IF This.UnixEnv>1 then
+	cUniFrac=This.Unidades*This.UnixEnv
+	cTotFrac=cUniFrac+This.Fracciones
+	
+	cUnidad=INT(cTotFrac/This.UnixEnv)
+	cFraccion=cTotFrac-(cUnidad*This.UnixEnv)
+	
+	IF cFraccion>This.UnixEnv then
+		=MESSAGEBOX("Ha Ocurrido un Error al intentar convertir unidades, "+CHR(13)+;
+					"El Resto fraccionario es mayor que las Unidades x Envase")
+		RETURN .f.
+	ENDIF
+ELSE
+	cUnidad=This.Unidades+This.Fracciones
+	cFraccion=0
+ENDIF
+
+This.Unidades=cUnidad
+This.Fracciones=cFraccion
+
+ENDPROC
+PROCEDURE pdevuelveproductos
+LOCAL vDireccionDevolucion
+
+IF !SEEK(vgTipoDoc, "TIPODOC",1) THEN
+	=MESSAGEBOX("Tipo de Documento no es valido")
+	RETURN .f.
+ENDIF
+
+IF USED("ERRORCUR") THEN
+	USE IN ErrorCur
+ENDIF
+
+CREATE  CURSOR ErrorCur (Codigo c(15), Detalle c(50), Cantidad n(10), Fraccion n(5), OBS c(100))
+
+SELECT Codigo, Detalle, SUM(Cantidad) as SumCan , SUM(Fraccion) as SumFra, Envase, Bodega, BodegaIN ;
+	FROM OriCur ;
+	WHERE !DELETED("ORICUR") .and. (Cantidad+Fraccion)>0 .and. !EMPTY(ALLTRIM(Codigo)) ;
+	GROUP BY Codigo ;
+	INTO CURSOR cOriCur
+
+IF _Tally=0 THEN
+	RETURN .t.
+ENDIF
+
+GO TOP IN cOriCur
+vContadorDevoluciones=0
+DO WHILE !EOF("cORICUR")
+	STORE 0 TO vCantidadGlobal, vCantidadGlobalTMP, vCantidadExistente, vCantidadExistenteTMP,;
+			   vCantidadAnterior
+
+	IF EMPTY(ALLTRIM(OriCur.Codigo)) THEN
+		SKIP IN cOriCur
+		LOOP
+	ENDIF
+
+	IF !SEEK(OriCur.Codigo, "PRODUCTO",1) THEN
+		INSERT INTO ErrorCur ;
+			VALUES (cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - NO EXISTE CODIGO EN MAESTRO DE PRODUCTOS")
+		SKIP IN cOriCur
+		LOOP
+	ENDIF
+
+
+	IF !SEEK(cOriCur.Bodega+cOriCur.Codigo, "tSALDOS",1) THEN 	
+		INSERT INTO ErrorCur ;
+			VALUES (cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - NO EXISTE CODIGO EN MAESTRO DE SALDOS")
+		SKIP IN cOriCur
+		LOOP
+	ENDIF
+			
+	vCantidadAnterior=(cOriCur.SumCan*cOriCur.Envase)+cOriCur.SumFra
+
+	vCantidadGlobal		=(Producto.Saldo   *Producto.UnixEnv)+Producto.SaldoFrac
+	vCantidadGlobalTMP	=(Producto.SaldoTMP*Producto.UnixEnv)+Producto.SalFraTMP		
+		
+	vCantidadExistente		=(tSaldos.SaldoFin *cOriCur.Envase)+tSaldos.SalFraFin	
+	vCantidadExistenteTMP	=(tSaldos.SalFinTMP*cOriCur.Envase)+tSaldos.SalFraFinT
+
+	WITH This
+		.UnixEnv=cOriCur.Envase
+		
+		********* Actualizando Saldos Reales en SD
+		.Unidades	=0
+		IF TipoDoc.dirMov THEN
+			.Fracciones	=vCantidadExistente+vCantidadAnterior
+		ELSE
+			.Fracciones	=vCantidadExistente-vCantidadAnterior
+		ENDIF
+		
+		.pcUniFra()
+		
+		Replace tSaldos.SaldoFin 	WITH .Unidades,;
+				tSaldos.SalFraFin 	WITH .Fracciones IN tSaldos			
+
+		********* Actualizando Saldos TMP en SD
+		.Unidades	=0
+		IF TipoDoc.dirMov THEN
+			.Fracciones	=vCantidadExistenteTMP+vCantidadAnterior
+		ELSE
+			.Fracciones	=vCantidadExistenteTMP-vCantidadAnterior
+		ENDIF
+				
+		.pcUniFra()
+		
+		Replace tSaldos.SalFinTmp 	WITH .Unidades, ;
+				tSaldos.SalFraFinT 	WITH .Fracciones IN tSaldos
+	ENDWITH
+	
+	vContadorDevoluciones=vContadorDevoluciones+1
+		
+	SKIP IN cOriCur
+ENDDO
+
+IF vContadorDevoluciones>0 THEN
+	This.ActualizaGlobales("cORICUR")
+ENDIF
+
+RETURN .t.
+ENDPROC
+PROCEDURE pdevuelvesaldos
+LPARAMETERS vpActualizaReales, vpActualizaTemporales
+IF USED("ERRORCUR") THEN
+	USE IN ErrorCur
+ENDIF
+
+CREATE  CURSOR ErrorCur (Codigo c(15), Detalle c(50), Cantidad n(10), Fraccion n(5), OBS c(100))
+
+SELECT Codigo, Detalle, SUM(Cantidad) as SumCan, SUM(Fraccion) as SumFra, Envase, Bodega, BodegaIN ;
+	FROM ItemCur ;
+	WHERE !DELETED("ITEMCUR") .and. (Cantidad+Fraccion)>0 .and. !EMPTY(ALLTRIM(Codigo)) ;
+	GROUP BY Codigo, Detalle ;
+	INTO CURSOR cItemCur
+
+GO TOP IN cItemCur
+DO WHILE !EOF("cITEMCUR")
+	IF DELETED("cITEMCUR") THEN
+		SKIP IN cItemCur
+		LOOP
+	ENDIF
+
+	vCantidadActual			=(cItemCur.SumCan*cItemCur.Envase)+cItemCur.SumFra
+
+	IF vpDireccionMovimiento THEN
+		IF !SEEK(cItemCur.BodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+			INSERT INTO ErrorCur VALUES ;
+				(cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA BODEGA SECUNDARIA EN TABLA DE SALDOS")
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+	ENDIF
+	
+	***** Validacion de existencia de productos
+	IF !SEEK(cItemCur.Bodega+cItemCur.Codigo, "tSALDOS",1) THEN
+		INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA EN TABLA DE SALDOS")
+		SKIP IN cItemCur
+		LOOP
+	ENDIF
+
+	IF !SEEK(cItemCur.Codigo, "PRODUCTO",1) THEN
+		INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA EN MAESTRO DE PRODUCTOS")
+		SKIP IN cItemCur
+		LOOP
+	ENDIF
+
+	vCantidadExistenteTMP		=(tSaldos.SalFinTMP*Producto.UnixEnv)+tSaldos.SalFraFinT
+	vCantidadExistente			=(tSaldos.SaldoFin*Producto.UnixEnv)+tSaldos.SalFraFin
+
+	IF SEEK(vgTipoDoc, "TIPODOC",1) THEN
+		IF vpActualizaReales THEN
+			WITH This
+				*** Saldos x Bodega
+				.Unidades=0
+				IF TipoDoc.DirMov THEN
+					.Fracciones=vCantidadExistente+vCantidadActual
+				ELSE
+					.Fracciones=vCantidadExistente-vCantidadActual
+				ENDIF
+				.UnixEnv=cItemCur.Envase
+				
+				.pcUniFra()
+				
+				Replace tSaldos.SaldoFin 	WITH .Unidades,;
+						tSaldos.SalFraFin 	WITH .Fracciones IN tSaldos
+			ENDWITH
+
+			****** Si es Transferencia entre Bodegas Se actualizara la Bodega Entrante (Real)
+			IF vpDireccionMovimiento THEN
+				IF SEEK(cItemCur.BodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+					WITH This
+						*** Saldos x Bodega
+						.Unidades=0
+						.Fracciones=vCantidadExistente+vCantidadActual
+						.UnixEnv=cItemCur.Envase
+						
+						.pcUniFra()
+						
+						Replace tSaldos.SaldoFin 	WITH .Unidades,;
+								tSaldos.SalFraFin 	WITH .Fracciones IN tSaldos
+					ENDWITH 			
+				ENDIF
+			ENDIF 							
+		ENDIF
+		
+		***** Actualizando Saldos Temporales
+		IF vpActualizaTemporales THEN
+			WITH This
+				** Saldos x Bodega
+				.Unidades=0
+				IF TipoDoc.DirMov THEN
+					.Fracciones=vCantidadExistenteTMP+vCantidadActual
+				ELSE
+					.Fracciones=vCantidadExistenteTMP-vCantidadActual
+				ENDIF
+				
+				.UnixEnv=cItemCur.Envase
+				
+				.pcUniFra()
+				
+				Replace tSaldos.SalFinTMP WITH .Unidades,;
+						tSaldos.SalFraFinT WITH .Fracciones IN tSaldos
+
+			ENDWITH 						
+			
+			****** Si es Transferencia entre Bodegas Se actualizara la Bodega Entrante (Temporal)
+			IF vpDireccionMovimiento THEN
+				IF SEEK(cItemCur.BodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+					WITH This
+						*** Saldos x Bodega
+						.Unidades=0
+						.Fracciones=vCantidadExistenteTMP+vCantidadActual
+						.UnixEnv=cItemCur.Envase
+						
+						.pcUniFra()
+						
+						Replace tSaldos.SalFinTMP WITH .Unidades,;
+								tSaldos.SalFraFinT WITH .Fracciones IN tSaldos
+					ENDWITH 			
+				ENDIF
+			ENDIF 										
+		ENDIF 		
+	ELSE
+		INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - TIPO DE DOCUMENTO INVALIDO")
+		SKIP IN cItemCur
+		LOOP
+	ENDIF 		
+	
+	SKIP IN cItemCur
+ENDDO
+
+This.ActualizaGlobales("cItemCur")
+USE IN cItemCur
+
+vResultadoErrrores=RECCOUNT("ERRORCUR")
+USE IN ErrorCur
+
+IF vResultadoErrores>0 THEN
+	USE IN ErrorCur
+	RETURN .f.
+ELSE
+	USE IN error
+	RETURN .t.
+ENDIF
+
+	
+
+		
+
+
+ENDPROC
+PROCEDURE pverificasaldostemporales
+*!*	Tipo de Verificacion: 	1=Nueva
+*!*							2=Antigua
+*!*							
+*!*	Direccion Movimiento:	.f.=Una sola Direccion
+*!*							.t.=Entre Bodegas						
+
+
+LPARAMETERS vpTipoVerificacion, vpDireccionMovimiento, ;
+			vpVerificaReales, vpVerificaTMP, vpComboBodega, vpComboBodegaIN
+
+IF USED("ERRORCUR") THEN
+	USE IN ErrorCur
+ENDIF
+
+CREATE  CURSOR ErrorCur (Codigo c(15), Detalle c(50), Cantidad n(10), Fraccion n(5), OBS c(100))
+
+SET ENGINEBEHAVIOR 70
+*** Se crea Cursor por si existen productos repetidos
+SELECT Codigo, Detalle, SUM(Cantidad) as SumCan, SUM(Fraccion) as SumFra, Envase ;
+	FROM ItemCur ;
+	WHERE !DELETED("ITEMCUR") .and. (Cantidad+Fraccion)>0 .and. !EMPTY(ALLTRIM(Codigo));
+	ORDER BY Linea ;
+	GROUP BY Codigo, Detalle ;
+	INTO CURSOR cItemCur
+
+IF vpTipoVerificacion=1 THEN
+	GO TOP IN cItemCur
+	DO WHILE !EOF("cITEMCUR")
+		IF DELETED("cITEMCUR") THEN
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+
+		vCantidadActual			=(cItemCur.SumCan*cItemCur.Envase)+cItemCur.SumFra
+
+		IF vpDireccionMovimiento THEN
+			IF !SEEK(vpComboBodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+				INSERT INTO ErrorCur VALUES ;
+					(cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA BODEGA SECUNDARIA EN TABLA DE SALDOS")
+				SKIP IN cItemCur
+				LOOP
+			ENDIF
+		ENDIF
+
+		***** Validacion de existencia de productos
+		IF !SEEK(vpComboBodega+cItemCur.Codigo, "tSALDOS",1) THEN
+			INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA EN TABLA DE SALDOS")
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+
+		IF !SEEK(cItemCur.Codigo, "PRODUCTO",1) THEN
+			INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA EN MAESTRO DE PRODUCTOS")
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+		
+		vCantidadExistente		=(tSaldos.SaldoFin*Producto.UnixEnv)+tSaldos.SalFraFin
+		vCantidadExistenteTMP	=(tSaldos.SalFinTMP*Producto.UnixEnv)+tSaldos.SalFraFinT
+			
+		IF SEEK(vgTipoDoc, "TIPODOC",1) THEN
+			IF TipoDoc.DirMov THEN
+				IF vpVerificaReales THEN
+					IF vCantidadExistente<vCantidadActual THEN
+						INSERT INTO ErrorCur ;
+								VALUES 	(cItemCur.Codigo, cItemCur.Detalle, ;
+										 cItemCur.SumCan, cItemCur.SumFra, " - SALDOS REALES GENERAN NEGATIVO")
+					ENDIF
+				ENDIF
+				IF vpVerificaTMP THEN
+					IF vCantidadExistenteTMP<vCantidadActual THEN
+						INSERT INTO ErrorCur ;
+								VALUES 	 (cItemCur.Codigo, cItemCur.Detalle, ;
+										  cItemCur.SumCan, cItemCur.SumFra, " - SALDOS TEMPORALES GENERAN NEGATIVO")
+					ENDIF
+				ENDIF
+			ELSE
+				IF vpDireccionMovimiento THEN 				
+					IF !SEEK(vpComboBodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+						INSERT INTO ErrorCur VALUES ;
+							(cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA BODEGA SECUNDARIA EN TABLA DE SALDOS")
+						SKIP IN cItemCur
+						LOOP
+					ENDIF
+					vCantidadExistenteSec		=(tSaldos.SaldoFin*Producto.UnixEnv)+tSaldos.SalFraFin
+					vCantidadExistenteTMPSec	=(tSaldos.SalFinTMP*Producto.UnixEnv)+tSaldos.SalFraFinT
+					IF vpVerificaReales THEN
+						IF vCantidadExistenteSec<vCantidadActual THEN
+							INSERT INTO ErrorCur ;
+									VALUES 	(cItemCur.Codigo, cItemCur.Detalle, ;
+											 cItemCur.SumCan, cItemCur.SumFra, " - SALDOS REALES GENERAN NEGATIVO EN BODEGA SECUNDARIA")
+						ENDIF
+					ENDIF
+					IF vpVerificaTMP THEN
+						IF vCantidadExistenteTMPSec<vCantidadActual THEN
+							INSERT INTO ErrorCur ;
+									VALUES 	 (cItemCur.Codigo, cItemCur.Detalle, ;
+											  cItemCur.SumCan, cItemCur.SumFra, " - SALDOS TEMPORALES GENERAN NEGATIVO GENERAN NEGATIVO en BODEGA SECUNDARIA")
+						ENDIF
+					ENDIF
+				ENDIF
+			ENDIF
+		ELSE
+			INSERT INTO ErrorCur ;
+				VALUES 	 (cItemCur.Codigo, cItemCur.Detalle, ;
+						  cItemCur.SumCan, cItemCur.SumFra, " - TIPO DE DOCUMENTO DESCONCIDO")
+		ENDIF 		
+		SKIP IN cItemCur
+	ENDDO
+ELSE
+	SELECT Codigo, Detalle, SUM(Cantidad) as SumCan, SUM(Fraccion) as SumFra, Envase, Bodega, BodegaIN ;
+		FROM OriCur ;
+		WHERE !DELETED("ORICUR") .and. (Cantidad+Fraccion)>0 .and. !EMPTY(ALLTRIM(Codigo)) ;
+		ORDER BY Linea ;
+		GROUP BY Codigo, Detalle ;
+		INTO CURSOR cOriCur
+	
+	GO TOP IN cOriCur
+	DO WHILE !EOF("cORICUR")
+		STORE 0 TO vCantidadActual, vCantidadExistente, vCantidadExistenteTMP,;
+				   vCantidadOriginal, vCantidadExistenteSec, vCantidadExistenteTMPSec
+		
+		vCantidadOriginal=(cOriCur.SumCan*cOriCur.Envase)+cOriCur.SumFra
+		CALCULATE SUM((cITemCur.SumCan*cItemCur.Envase)+cItemCur.SumFra) FOR cItemCur.Codigo=cOriCur.Codigo ;
+				TO vCantidadActual IN cItemCur
+		
+		***** Validacion de existencia de productos
+		IF !SEEK(cOriCur.Bodega+cOriCur.Codigo, "tSALDOS",1) THEN
+			INSERT INTO ErrorCur VALUES (cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - NO SE ENCUENTRA EN TABLA DE SALDOS")
+			SKIP IN cOriCur
+			LOOP
+		ELSE
+			vCantidadExistente		=(tSaldos.SaldoFin*cOriCur.Envase)+tSaldos.SalFraFin
+			vCantidadExistenteTMP	=(tSaldos.SalFinTMP*cOriCur.Envase)+tSaldos.SalFraFinT
+		ENDIF
+
+		IF !SEEK(cOriCur.Codigo, "PRODUCTO",1) THEN
+			INSERT INTO ErrorCur VALUES (cOriCur.Codigo, cOrimCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - NO SE ENCUENTRA EN MAESTRO DE PRODUCTOS")
+			SKIP IN cOriCur
+			LOOP
+		ENDIF
+		
+		IF vpDireccionMovimiento THEN
+			IF !SEEK(cOriCur.BodegaIN+cOrimCur.Codigo, "tSALDOS",1) THEN
+				INSERT INTO ErrorCur VALUES ;
+					(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - NO SE ENCUENTRA BODEGA SECUNDARIA EN TABLA DE SALDOS")
+				SKIP IN cOriCur
+				LOOP
+			ELSE
+				vCantidadExistenteSec	=(tSaldos.SaldoFin*cOriCur.Envase)+tSaldos.SalFraFin
+				vCantidadExistenteTMPSec=(tSaldos.SalFinTMP*cOriCur.Envase)+tSaldos.SalFraFinT				
+			ENDIF
+		ENDIF
+
+		IF SEEK(vgTipoDoc, "TIPODOC",1) THEN
+			IF TipoDoc.DirMov THEN 		
+				IF (vCantidadExistente+vCantidadOriginal-vCantidadActual)<0 THEN
+					INSERT INTO ErrorCur VALUES ;
+						(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (REAL)")
+					SKIP IN cItemCur
+					LOOP
+				ENDIF
+				
+				IF (vCantidadExistenteTMP+vCantidadOriginal-vCantidadActual)<0 THEN
+					INSERT INTO ErrorCur VALUES ;
+						(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (TEMPORAL)")
+					SKIP IN cItemCur
+					LOOP
+				ENDIF					
+			ELSE
+				IF (vCantidadExistente-vCantidadOriginal+vCantidadActual)<0 THEN
+					INSERT INTO ErrorCur VALUES ;
+						(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (REAL)")
+					SKIP IN cItemCur
+					LOOP
+				ENDIF
+				
+				IF (vCantidadExistenteTMP-vCantidadOriginal+vCantidadActual)<0 THEN
+					INSERT INTO ErrorCur VALUES ;
+						(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (TEMPORAL)")
+					SKIP IN cItemCur
+					LOOP
+				ENDIF
+			ENDIF
+		ELSE
+			INSERT INTO ErrorCur VALUES ;
+				(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - TIPO DE DOCUMENTO NO VALIDO")
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+		
+		IF vpDireccionMovimiento THEN 	
+			IF (vCantidadExistenteSec-vCantidadOriginal+vCantidadActual)<0 THEN
+				INSERT INTO ErrorCur VALUES ;
+					(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (REAL) EN BODEGA SECUNDARIA")
+				SKIP IN cItemCur
+				LOOP
+			ENDIF
+			
+			IF (vCantidadExistenteTMPSec-vCantidadOriginal+vCantidadActual)<0 THEN
+				INSERT INTO ErrorCur VALUES ;
+					(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (TEMPORAL) EN BODEGA SECUNDARIA")
+				SKIP IN cItemCur
+				LOOP
+			ENDIF
+		ENDIF
+					
+		SKIP IN cOriCur
+	ENDDO
+ENDIF
+
+USE IN cItemCur
+IF USED("cORICUR") THEN
+	USE IN cOriCur
+ENDIF
+
+IF RECCOUNT("ERRORCUR")>0 THEN
+	RETURN .f.
+ELSE
+	RETURN .t.
+ENDIF
+		
+
+ENDPROC
+PROCEDURE pverificasaldostemporalesc
+*!*	Tipo de Verificacion: 	1=Nueva
+*!*							2=Antigua
+*!*							
+*!*	Direccion Movimiento:	.f.=Una sola Direccion
+*!*							.t.=Entre Bodegas						
+
+
+LPARAMETERS vpTipoVerificacion, vpDireccionMovimiento, ;
+			vpVerificaReales, vpVerificaTMP, vpComboBodega, vpComboBodegaIN
+
+LOCAL vCantidadActual, vCantidadExistente, vCantidadExistenteTMP, vCantidadExistenteSec, vCantidadExistenteTMPSec, ;
+	  vCantidadOriginal
+
+IF USED("ERRORCUR") THEN
+	USE IN ErrorCur
+ENDIF
+
+CREATE  CURSOR ErrorCur (Codigo c(15), Detalle c(50), Cantidad n(10), Fraccion n(5), OBS c(100))
+
+SET ENGINEBEHAVIOR 70
+*** Se crea Cursor por si existen productos repetidos
+SELECT Codigo, Detalle, SUM(Cantidad) as SumCan, SUM(Fraccion) as SumFra, Envase ;
+	FROM ItemCur ;
+	WHERE !DELETED("ITEMCUR") .and. (Cantidad+Fraccion)>0 .and. !EMPTY(ALLTRIM(Codigo));
+	ORDER BY Linea ;
+	GROUP BY Codigo, Detalle ;
+	INTO CURSOR cItemCur
+
+IF vpTipoVerificacion=1 THEN
+	GO TOP IN cItemCur
+	DO WHILE !EOF("cITEMCUR")
+		IF DELETED("cITEMCUR") THEN
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+
+		vCantidadActual			=(cItemCur.SumCan*cItemCur.Envase)+cItemCur.SumFra
+
+		IF vpDireccionMovimiento THEN
+			IF !SEEK(vpComboBodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+				INSERT INTO ErrorCur VALUES ;
+					(cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA BODEGA SECUNDARIA EN TABLA DE SALDOS")
+				SKIP IN cItemCur
+				LOOP
+			ENDIF
+		ENDIF
+
+		***** Validacion de existencia de productos
+		IF !SEEK(vpComboBodega+cItemCur.Codigo, "tSALDOS",1) THEN
+			INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA EN TABLA DE SALDOS")
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+
+		IF !SEEK(cItemCur.Codigo, "PRODUCTO",1) THEN
+			INSERT INTO ErrorCur VALUES (cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA EN MAESTRO DE PRODUCTOS")
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+		
+		vCantidadExistente		=(tSaldos.SaldoFin*Producto.UnixEnv)+tSaldos.SalFraFin
+		vCantidadExistenteTMP	=(tSaldos.SalFinTMP*Producto.UnixEnv)+tSaldos.SalFraFinT
+			
+		IF SEEK(vgTipoDoc, "TIPODOC",1) THEN
+			IF TipoDoc.DirMov THEN
+				IF vpVerificaReales THEN
+					IF vCantidadExistente<vCantidadActual THEN
+						INSERT INTO ErrorCur ;
+								VALUES 	(cItemCur.Codigo, cItemCur.Detalle, ;
+										 cItemCur.SumCan, cItemCur.SumFra, " - SALDOS REALES GENERAN NEGATIVO")
+					ENDIF
+				ENDIF
+				IF vpVerificaTMP THEN
+					IF vCantidadExistenteTMP<vCantidadActual THEN
+						INSERT INTO ErrorCur ;
+								VALUES 	 (cItemCur.Codigo, cItemCur.Detalle, ;
+										  cItemCur.SumCan, cItemCur.SumFra, " - SALDOS TEMPORALES GENERAN NEGATIVO")
+					ENDIF
+				ENDIF
+			ELSE
+				IF vpDireccionMovimiento THEN 				
+					IF !SEEK(vpComboBodegaIN+cItemCur.Codigo, "tSALDOS",1) THEN
+						INSERT INTO ErrorCur VALUES ;
+							(cItemCur.Codigo, cItemCur.Detalle, cItemCur.SumCan, cItemCur.SumFra, " - NO SE ENCUENTRA BODEGA SECUNDARIA EN TABLA DE SALDOS")
+						SKIP IN cItemCur
+						LOOP
+					ENDIF
+					vCantidadExistenteSec		=(tSaldos.SaldoFin*Producto.UnixEnv)+tSaldos.SalFraFin
+					vCantidadExistenteTMPSec	=(tSaldos.SalFinTMP*Producto.UnixEnv)+tSaldos.SalFraFinT
+					IF vpVerificaReales THEN
+						IF vCantidadExistenteSec<vCantidadActual THEN
+							INSERT INTO ErrorCur ;
+									VALUES 	(cItemCur.Codigo, cItemCur.Detalle, ;
+											 cItemCur.SumCan, cItemCur.SumFra, " - SALDOS REALES GENERAN NEGATIVO EN BODEGA SECUNDARIA")
+						ENDIF
+					ENDIF
+					IF vpVerificaTMP THEN
+						IF vCantidadExistenteTMPSec<vCantidadActual THEN
+							INSERT INTO ErrorCur ;
+									VALUES 	 (cItemCur.Codigo, cItemCur.Detalle, ;
+											  cItemCur.SumCan, cItemCur.SumFra, " - SALDOS TEMPORALES GENERAN NEGATIVO GENERAN NEGATIVO en BODEGA SECUNDARIA")
+						ENDIF
+					ENDIF
+				ENDIF
+			ENDIF
+		ELSE
+			INSERT INTO ErrorCur ;
+				VALUES 	 (cItemCur.Codigo, cItemCur.Detalle, ;
+						  cItemCur.SumCan, cItemCur.SumFra, " - TIPO DE DOCUMENTO DESCONCIDO")
+		ENDIF 		
+		SKIP IN cItemCur
+	ENDDO
+ELSE
+	SELECT Codigo, Detalle, SUM(Cantidad) as SumCan, SUM(Fraccion) as SumFra, Envase, Bodega, BodegaIN ;
+		FROM OriCur ;
+		WHERE !DELETED("ORICUR") .and. (Cantidad+Fraccion)>0 .and. !EMPTY(ALLTRIM(Codigo)) ;
+		ORDER BY Linea ;
+		GROUP BY Codigo, Detalle ;
+		INTO CURSOR cOriCur
+	
+	GO TOP IN cOriCur
+	DO WHILE !EOF("cORICUR")
+		STORE 0 TO vCantidadActual, vCantidadExistente, vCantidadExistenteTMP,;
+				   vCantidadOriginal, vCantidadExistenteSec, vCantidadExistenteTMPSec
+		
+		vCantidadOriginal=(cOriCur.SumCan*cOriCur.Envase)+cOriCur.SumFra
+		CALCULATE SUM((cITemCur.SumCan*cItemCur.Envase)+cItemCur.SumFra) FOR cItemCur.Codigo=cOriCur.Codigo ;
+				TO vCantidadActual IN cItemCur
+		
+		***** Validacion de existencia de productos
+		IF !SEEK(cOriCur.Bodega+cOriCur.Codigo, "tSALDOS",1) THEN
+			INSERT INTO ErrorCur VALUES (cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - NO SE ENCUENTRA EN TABLA DE SALDOS")
+			SKIP IN cOriCur
+			LOOP
+		ELSE
+			vCantidadExistente		=(tSaldos.SaldoFin*cOriCur.Envase)+tSaldos.SalFraFin
+			vCantidadExistenteTMP	=(tSaldos.SalFinTMP*cOriCur.Envase)+tSaldos.SalFraFinT
+		ENDIF
+
+		IF !SEEK(cOriCur.Codigo, "PRODUCTO",1) THEN
+			INSERT INTO ErrorCur VALUES (cOriCur.Codigo, cOrimCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - NO SE ENCUENTRA EN MAESTRO DE PRODUCTOS")
+			SKIP IN cOriCur
+			LOOP
+		ENDIF
+		
+		IF vpDireccionMovimiento THEN
+			IF !SEEK(cOriCur.BodegaIN+cOrimCur.Codigo, "tSALDOS",1) THEN
+				INSERT INTO ErrorCur VALUES ;
+					(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - NO SE ENCUENTRA BODEGA SECUNDARIA EN TABLA DE SALDOS")
+				SKIP IN cOriCur
+				LOOP
+			ELSE
+				vCantidadExistenteSec	=(tSaldos.SaldoFin*cOriCur.Envase)+tSaldos.SalFraFin
+				vCantidadExistenteTMPSec=(tSaldos.SalFinTMP*cOriCur.Envase)+tSaldos.SalFraFinT				
+			ENDIF
+		ENDIF
+
+		IF SEEK(vgTipoDoc, "TIPODOC",1) THEN
+			IF TipoDoc.DirMov THEN 		
+				IF (vCantidadExistente+vCantidadOriginal-vCantidadActual)<0 THEN
+					INSERT INTO ErrorCur VALUES ;
+						(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (REAL)")
+					SKIP IN cItemCur
+					LOOP
+				ENDIF
+				
+				IF (vCantidadExistenteTMP+vCantidadOriginal-vCantidadActual)<0 THEN
+					INSERT INTO ErrorCur VALUES ;
+						(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (TEMPORAL)")
+					SKIP IN cItemCur
+					LOOP
+				ENDIF					
+			ELSE
+				IF (vCantidadExistente-vCantidadOriginal+vCantidadActual)<0 THEN
+					INSERT INTO ErrorCur VALUES ;
+						(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (REAL)")
+					SKIP IN cItemCur
+					LOOP
+				ENDIF
+				
+				IF (vCantidadExistenteTMP-vCantidadOriginal+vCantidadActual)<0 THEN
+					INSERT INTO ErrorCur VALUES ;
+						(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (TEMPORAL)")
+					SKIP IN cItemCur
+					LOOP
+				ENDIF
+			ENDIF
+		ELSE
+			INSERT INTO ErrorCur VALUES ;
+				(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - TIPO DE DOCUMENTO NO VALIDO")
+			SKIP IN cItemCur
+			LOOP
+		ENDIF
+		
+		IF vpDireccionMovimiento THEN 	
+			IF (vCantidadExistenteSec-vCantidadOriginal+vCantidadActual)<0 THEN
+				INSERT INTO ErrorCur VALUES ;
+					(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (REAL) EN BODEGA SECUNDARIA")
+				SKIP IN cItemCur
+				LOOP
+			ENDIF
+			
+			IF (vCantidadExistenteTMPSec-vCantidadOriginal+vCantidadActual)<0 THEN
+				INSERT INTO ErrorCur VALUES ;
+					(cOriCur.Codigo, cOriCur.Detalle, cOriCur.SumCan, cOriCur.SumFra, " - GENERA STOCK NEGATIVO (TEMPORAL) EN BODEGA SECUNDARIA")
+				SKIP IN cItemCur
+				LOOP
+			ENDIF
+		ENDIF
+					
+		SKIP IN cOriCur
+	ENDDO
+ENDIF
+
+USE IN cItemCur
+IF USED("cORICUR") THEN
+	USE IN cOriCur
+ENDIF
+
+IF RECCOUNT("ERRORCUR")>0 THEN
+	RETURN .f.
+ELSE
+	RETURN .t.
+ENDIF
+		
+
+ENDPROC
+[END METHODS]
+[START RESERVED1]
+Class[END RESERVED1]
+[START RESERVED2]
+1[END RESERVED2]
+[START RESERVED3]
+unixenv Este campo acepta las Unidades x Envase que poseen un Producto
+codpro Codigo del Producto de Operaciones
+codbod Codigo de la Bodega 
+unidades Propiedad de Salida de Los Saldos Iniciales resultantes medidos en Unidades
+fracciones Propiedad de Salida del Resultado de Saldos de un Producto en Fracciones
+fecha Fecha utilizada como inicio de proceso
+*pcalculasalini 
+*pcunifra 
+*mdecrementasaldo 
+*pverificasaldostemporales 
+*pactualizasaldos 
+*pdevuelveproductos 
+*actualizaglobales 
+*pdevuelvesaldos 
+*pactualizasaldosdte 
+*pdevuelvesaldoscompra 
+*pverificasaldostemporalesc 
+[END RESERVED3]
+[START RESERVED6]
+Pixels[END RESERVED6]
+
+[ RECORD]
+[PLATFORM] COMMENT 
+[UNIQUEID] RESERVED  
+[OBJNAME] movimprod
+[EOF]
