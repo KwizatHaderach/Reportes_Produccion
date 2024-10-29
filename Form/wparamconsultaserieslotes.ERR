@@ -1,0 +1,222 @@
+Ù
+Error in line 144: Unrecognized command verb.
+Width = 648
+Error in line 167: Statement is not in a procedure.
+ShowWindow = 1
+Error in line 168: Statement is not in a procedure.
+DoCreate = .T.
+Error in line 169: Statement is not in a procedure.
+ShowTips = .T.
+Error in line 170: Statement is not in a procedure.
+AutoCenter = .T.
+Error in line 171: Statement is not in a procedure.
+Caption = "Parametros : Series y Lotes"
+Error in line 172: Statement is not in a procedure.
+MaxButton = .F.
+Error in line 173: Statement is not in a procedure.
+MinButton = .F.
+Error in line 174: Statement is not in a procedure.
+KeyPreview = .T.
+Error in line 175: Statement is not in a procedure.
+WindowType = 1
+Error in line 176: Statement is not in a procedure.
+Name = "wParamConsultaSeriesLotes"
+Error in line 177: Statement is not in a procedure.
+LPARAMETERS nKeyCode, nShiftAltCtrl
+Error in line 179: Statement is not in a procedure.
+IF nKeyCode=27 THEN 
+Error in line 181: Statement is not in a procedure.
+Thisform.Release
+Error in line 182: Statement is not in a procedure.
+ENDIF 
+Error in line 183: Statement is not in a procedure.
+ENDPROC
+Error in line 185: Nesting error.
+FontBold = .T.
+Error in line 195: Statement is not in a procedure.
+BackStyle = 0
+Error in line 196: Statement is not in a procedure.
+Caption = "Producto"
+Error in line 197: Statement is not in a procedure.
+Height = 17
+Error in line 198: Statement is not in a procedure.
+Left = 27
+Error in line 199: Statement is not in a procedure.
+Top = 28
+Error in line 200: Statement is not in a procedure.
+Width = 54
+Error in line 201: Statement is not in a procedure.
+TabIndex = 3
+Error in line 202: Statement is not in a procedure.
+Name = "Label1"
+Error in line 203: Statement is not in a procedure.
+Left = 91
+Error in line 205: Statement is not in a procedure.
+MaxLength = 15
+Error in line 206: Statement is not in a procedure.
+TabIndex = 1
+Error in line 207: Statement is not in a procedure.
+Top = 24
+Error in line 208: Statement is not in a procedure.
+Width = 100
+Error in line 209: Statement is not in a procedure.
+Name = "Text1"
+Error in line 210: Statement is not in a procedure.
+This.AddProperty("SALDOGLOBAL",0)
+Error in line 212: Statement is not in a procedure.
+ENDPROC
+Error in line 214: Nesting error.
+ýùÆ
+Error in line 258: Unrecognized command verb.
+ýù—
+Error in line 259: Unrecognized command verb.
+ýùs
+Error in line 261: Unrecognized command verb.
+Height = 52
+Error in line 267: Statement is not in a procedure.
+Left = 192
+Error in line 268: Statement is not in a procedure.
+TabIndex = 4
+Error in line 269: Statement is not in a procedure.
+Top = 24
+Error in line 270: Statement is not in a procedure.
+Width = 411
+Error in line 271: Statement is not in a procedure.
+DisabledForeColor = 1,0,0
+Error in line 272: Syntax error.
+Name = "Text2"
+Error in line 273: Statement is not in a procedure.
+Left = 29
+Error in line 275: Statement is not in a procedure.
+Height = 17
+Error in line 276: Statement is not in a procedure.
+Width = 183
+Error in line 277: Statement is not in a procedure.
+FontBold = .T.
+Error in line 278: Statement is not in a procedure.
+AutoSize = .T.
+Error in line 279: Statement is not in a procedure.
+Alignment = 0
+Error in line 280: Statement is not in a procedure.
+BackStyle = 0
+Error in line 281: Statement is not in a procedure.
+Caption = "Generar Cartola del Producto"
+Error in line 282: Statement is not in a procedure.
+Value = .F.
+Error in line 283: Statement is not in a procedure.
+TabIndex = 5
+Error in line 284: Statement is not in a procedure.
+Name = "Check1"
+Error in line 285: Statement is not in a procedure.
+commandbutton
+Error in line 287: Unrecognized command verb.
+commandbutton
+Error in line 288: Unrecognized command verb.
+Left = 516
+Error in line 289: Statement is not in a procedure.
+Height = 27
+Error in line 290: Statement is not in a procedure.
+Width = 84
+Error in line 291: Statement is not in a procedure.
+Caption = "Ejecutar"
+Error in line 292: Statement is not in a procedure.
+TabIndex = 2
+Error in line 293: Statement is not in a procedure.
+Name = "Command1"
+Error in line 294: Statement is not in a procedure.
+TEXT TO _DataProducto TEXTMERGE NOSHOW 
+Error in line 296: Statement is not in a procedure.
+<Codigo><<Thisform.Text1.Value>></Codigo>
+Error in line 297: Statement is not in a procedure.
+<Detalle><<Thisform.Text2.Value>></Detalle>
+Error in line 298: Statement is not in a procedure.
+<GenerarCartola><<IIF(Thisform.Check1.Value, "true", "false")>></GenerarCartola>)
+Error in line 299: Statement is not in a procedure.
+<SaldoGlobal><<Thisform.Text1.SaldoGlobal>></SaldoGlobal>
+Error in line 300: Statement is not in a procedure.
+<RangoTiempo><<Thisform.OptionGroup1.Value>></RangoTiempo>
+Error in line 301: Statement is not in a procedure.
+ENDTEXT 
+Error in line 302: Statement is not in a procedure.
+DO FORM .\form\wconsultaserieslotes.scx WITH _DataProducto
+Error in line 305: Statement is not in a procedure.
+ENDPROC
+Error in line 308: Nesting error.
+FontBold = .T.
+Error in line 313: Statement is not in a procedure.
+BackStyle = 0
+Error in line 314: Statement is not in a procedure.
+Caption = "Rango Tiempo"
+Error in line 315: Statement is not in a procedure.
+Height = 17
+Error in line 316: Statement is not in a procedure.
+Left = 29
+Error in line 317: Statement is not in a procedure.
+Top = 93
+Error in line 318: Statement is not in a procedure.
+Width = 83
+Error in line 319: Statement is not in a procedure.
+TabIndex = 3
+Error in line 320: Statement is not in a procedure.
+Name = "Label2"
+Error in line 321: Statement is not in a procedure.
+Value = 1
+Error in line 323: Statement is not in a procedure.
+Height = 33
+Error in line 324: Statement is not in a procedure.
+Left = 128
+Error in line 325: Statement is not in a procedure.
+Top = 84
+Error in line 326: Statement is not in a procedure.
+Width = 264
+Error in line 327: Statement is not in a procedure.
+Themes = .F.
+Error in line 328: Statement is not in a procedure.
+Name = "Optiongroup1"
+Error in line 329: Statement is not in a procedure.
+Option1.Caption = "Ultimo Año"
+Error in line 330: Statement is not in a procedure.
+Option1.Value = 1
+Error in line 331: Statement is not in a procedure.
+Option1.Height = 21
+Error in line 332: Statement is not in a procedure.
+Option1.Left = 9
+Error in line 333: Statement is not in a procedure.
+Option1.Style = 1
+Error in line 334: Statement is not in a procedure.
+Option1.Top = 5
+Error in line 335: Statement is not in a procedure.
+Option1.Width = 82
+Error in line 336: Statement is not in a procedure.
+Option1.Name = "Option1"
+Error in line 337: Statement is not in a procedure.
+Option2.Caption = "Dos Años"
+Error in line 338: Statement is not in a procedure.
+Option2.Height = 21
+Error in line 339: Statement is not in a procedure.
+Option2.Left = 93
+Error in line 340: Statement is not in a procedure.
+Option2.Style = 1
+Error in line 341: Statement is not in a procedure.
+Option2.Top = 5
+Error in line 342: Statement is not in a procedure.
+Option2.Width = 82
+Error in line 343: Statement is not in a procedure.
+Option2.Name = "Option2"
+Error in line 344: Statement is not in a procedure.
+Option3.Caption = "Todos"
+Error in line 345: Statement is not in a procedure.
+Option3.Height = 21
+Error in line 346: Statement is not in a procedure.
+Option3.Left = 177
+Error in line 347: Statement is not in a procedure.
+Option3.Style = 1
+Error in line 348: Statement is not in a procedure.
+Option3.Top = 5
+Error in line 349: Statement is not in a procedure.
+Option3.Width = 82
+Error in line 350: Statement is not in a procedure.
+Option3.Name = "Option3"
+Error in line 351: Statement is not in a procedure.
+Arial, 1, 9, 6, 15, 12, 32, 3, 0
+Error in line 353: Unrecognized command verb.

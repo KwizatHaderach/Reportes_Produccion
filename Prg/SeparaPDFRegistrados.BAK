@@ -1,0 +1,35 @@
+CLOSE ALL
+CLEAR ALL
+SET SAFETY OFF
+
+stdVia = "C:\Desarrollos\Copol\Data_Consultas\"
+stdViaRepositorioPDF = "C:\Desarrollos\Copol\RepositorioPDF\"
+
+USE stdVia+"ORDTRA.Dbf" IN 0 
+USE stdVia+"DETOTPDF.Dbf" IN 0 
+
+ZAP IN DetOTPDF
+
+SELECT * FROM OrdTra WHERE !EMPTY(ALLTRIM(OrdTra.PDFAsigna)) INTO CURSOR cTotales
+
+= ADIR(aArchivos,stdViaRepositorioPDF+"*.pdf")
+
+SET STEP ON 
+GO TOP IN cTotales
+DO WHILE !EOF("cTOTALES") 
+	NombreActivo = JUSTFNAME(cTotales.PDFAsigna)
+	
+	
+	FOR vI = 1 TO ALEN(aArchivos, 1)
+		IF UPPER(ALLTRIM(aArchivos(vI,1))) == UPPER(ALLTRIM(NombreActivo)) THEN 	
+			INSERT INTO DetOTPDF (NomArch, OTID) ;
+				VALUES (NombreActivo, cTotales.OT_ID)
+			EXIT 
+		ENDIF 
+	ENDFOR 
+	
+	SKIP IN cTotales
+ENDDO 
+
+CLOSE ALL
+CLEAR ALL

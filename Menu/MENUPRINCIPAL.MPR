@@ -1,12 +1,12 @@
 *       *********************************************************
 *       *                                                         
-*       * 15/03/2022         MENUPRINCIPAL.MPR          09:51:23  
+*       * 09/10/2024         MENUPRINCIPAL.MPR          20:31:49  
 *       *                                                         
 *       *********************************************************
 *       *                                                         
 *       * Author's Name                                           
 *       *                                                         
-*       * Copyright (C) 2022 Company Name                         
+*       * Copyright (C) 2024 Company Name                         
 *       * Address                                                 
 *       * City,     Zip                                           
 *       *                                                         
@@ -103,20 +103,21 @@ ENDIF
 IF m.cTypeParm2 = "C" AND !EMPTY(m.getMenuName)
 	m.cMenuName = m.getMenuName
 ENDIF
-DIMENSION a_menupops[8]
+DIMENSION a_menupops[9]
 IF TYPE("m.lUniquePopups")="L" AND m.lUniquePopups
 	FOR nTotPops = 1 TO ALEN(a_menupops)
 		a_menupops[m.nTotPops]= SYS(2015)
 	ENDFOR
 ELSE
 	a_menupops[1]="produccion"
-	a_menupops[2]="_5au0ktcmx"
-	a_menupops[3]="cuentascor"
-	a_menupops[4]="newitem"
-	a_menupops[5]="proveedore"
-	a_menupops[6]="cobranzas"
-	a_menupops[7]="archivosma"
-	a_menupops[8]="mantenimie"
+	a_menupops[2]="lotes"
+	a_menupops[3]="_5au0ktcmx"
+	a_menupops[4]="cuentascor"
+	a_menupops[5]="newitem"
+	a_menupops[6]="proveedore"
+	a_menupops[7]="cobranzas"
+	a_menupops[8]="archivosma"
+	a_menupops[9]="mantenimie"
 ENDIF
 
 
@@ -129,29 +130,32 @@ ENDIF
 
 DEFINE MENU (m.cMenuName) IN (m.oFormRef.Name) BAR
 
-DEFINE PAD _6ac0l4ixv OF (m.cMenuName) PROMPT "Produccion" COLOR SCHEME 3 ;
+DEFINE PAD _70j180514 OF (m.cMenuName) PROMPT "Produccion" COLOR SCHEME 3 ;
 	KEY ALT+P, "" ;
 	SKIP FOR _MenuPrincipalOcupado 
-DEFINE PAD _6ac0l4ixw OF (m.cMenuName) PROMPT "Ordenes de Trabajo" COLOR SCHEME 3 ;
+DEFINE PAD _70j180515 OF (m.cMenuName) PROMPT "Lotes" COLOR SCHEME 3 ;
+	KEY ALT+L, ""
+DEFINE PAD _70j180516 OF (m.cMenuName) PROMPT "Ordenes de Trabajo" COLOR SCHEME 3 ;
 	KEY ALT+O, "" ;
 	SKIP FOR _MenuPrincipalOcupado
-DEFINE PAD _6ac0l4ixx OF (m.cMenuName) PROMPT "Cuentas Corrientes" COLOR SCHEME 3 ;
+DEFINE PAD _70j180517 OF (m.cMenuName) PROMPT "Cuentas Corrientes" COLOR SCHEME 3 ;
 	KEY ALT+C, "" ;
 	SKIP FOR _MenuPrincipalOcupado 
-DEFINE PAD _6ac0l4ixy OF (m.cMenuName) PROMPT "Cobranzas" COLOR SCHEME 3 ;
+DEFINE PAD _70j180518 OF (m.cMenuName) PROMPT "Cobranzas" COLOR SCHEME 3 ;
 	KEY ALT+C, ""
-DEFINE PAD _6ac0l4ixz OF (m.cMenuName) PROMPT "Archivos Maestros" COLOR SCHEME 3 ;
+DEFINE PAD _70j180519 OF (m.cMenuName) PROMPT "Archivos Maestros" COLOR SCHEME 3 ;
 	KEY ALT+A, "" ;
 	SKIP FOR _MenuPrincipalOcupado 
-DEFINE PAD _6ac0l4iy0 OF (m.cMenuName) PROMPT "Mantenimiento" COLOR SCHEME 3 ;
+DEFINE PAD _70j18051a OF (m.cMenuName) PROMPT "Mantenimiento" COLOR SCHEME 3 ;
 	KEY ALT+M, "" ;
 	SKIP FOR _MenuPrincipalOcupado 
-ON PAD _6ac0l4ixv OF (m.cMenuName) ACTIVATE POPUP (a_menupops[1])
-ON PAD _6ac0l4ixw OF (m.cMenuName) ACTIVATE POPUP (a_menupops[2])
-ON PAD _6ac0l4ixx OF (m.cMenuName) ACTIVATE POPUP (a_menupops[3])
-ON PAD _6ac0l4ixy OF (m.cMenuName) ACTIVATE POPUP (a_menupops[6])
-ON PAD _6ac0l4ixz OF (m.cMenuName) ACTIVATE POPUP (a_menupops[7])
-ON PAD _6ac0l4iy0 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[8])
+ON PAD _70j180514 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[1])
+ON PAD _70j180515 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[2])
+ON PAD _70j180516 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[3])
+ON PAD _70j180517 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[4])
+ON PAD _70j180518 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[7])
+ON PAD _70j180519 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[8])
+ON PAD _70j18051a OF (m.cMenuName) ACTIVATE POPUP (a_menupops[9])
 
 DEFINE POPUP (a_menupops[1]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
 DEFINE BAR 1 OF (a_menupops[1]) PROMPT "Maestra de Procesos"
@@ -161,113 +165,127 @@ DEFINE BAR 4 OF (a_menupops[1]) PROMPT "Consulta de Produccion"
 DEFINE BAR 5 OF (a_menupops[1]) PROMPT "Resumen x Periodos"
 DEFINE BAR 6 OF (a_menupops[1]) PROMPT "Consulta Egresos Produccion"
 DEFINE BAR 7 OF (a_menupops[1]) PROMPT "Inventario General"
+DEFINE BAR 8 OF (a_menupops[1]) PROMPT "Series y Lotes"
 ON SELECTION BAR 1 OF (a_menupops[1]) ;
-	DO _6ac0l4iy1 ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051b ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 ON SELECTION BAR 2 OF (a_menupops[1]) ;
-	DO _6ac0l4iy2 ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051c ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 ON SELECTION BAR 3 OF (a_menupops[1]) ;
-	DO _6ac0l4iy3 ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051d ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 ON SELECTION BAR 4 OF (a_menupops[1]) ;
-	DO _6ac0l4iy4 ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051e ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 ON SELECTION BAR 5 OF (a_menupops[1]) ;
-	DO _6ac0l4iy5 ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051f ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 ON SELECTION BAR 6 OF (a_menupops[1]) ;
-	DO _6ac0l4iy6 ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051g ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 ON SELECTION BAR 7 OF (a_menupops[1]) ;
-	DO _6ac0l4iy7 ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051h ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+ON SELECTION BAR 8 OF (a_menupops[1]) ;
+	DO _70j18051i ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 
 DEFINE POPUP (a_menupops[2]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF (a_menupops[2]) PROMPT "Generacion de OT"
-DEFINE BAR 2 OF (a_menupops[2]) PROMPT "Reporte de OT's Generadas"
+DEFINE BAR 1 OF (a_menupops[2]) PROMPT "Salidas x Lotes"
 ON SELECTION BAR 1 OF (a_menupops[2]) ;
-	DO _6ac0l4iy8 ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
-ON SELECTION BAR 2 OF (a_menupops[2]) ;
-	DO _6ac0l4iy9 ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051j ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 
 DEFINE POPUP (a_menupops[3]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF (a_menupops[3]) PROMPT "Clientes"
-DEFINE BAR 2 OF (a_menupops[3]) PROMPT "Proveedores"
-DEFINE BAR 3 OF (a_menupops[3]) PROMPT "Cobros vs Deudas"
-ON BAR 1 OF (a_menupops[3]) ACTIVATE POPUP (a_menupops[4])
-ON BAR 2 OF (a_menupops[3]) ACTIVATE POPUP (a_menupops[5])
-ON SELECTION BAR 3 OF (a_menupops[3]) ;
-	DO _6ac0l4iya ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+DEFINE BAR 1 OF (a_menupops[3]) PROMPT "Generacion de OT"
+DEFINE BAR 2 OF (a_menupops[3]) PROMPT "Reporte de OT's Generadas"
+ON SELECTION BAR 1 OF (a_menupops[3]) ;
+	DO _70j18051k ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+ON SELECTION BAR 2 OF (a_menupops[3]) ;
+	DO _70j18051l ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 
 DEFINE POPUP (a_menupops[4]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF (a_menupops[4]) PROMPT "Pagos Emitidos"
-DEFINE BAR 2 OF (a_menupops[4]) PROMPT "Gestion de Cheques"
-DEFINE BAR 3 OF (a_menupops[4]) PROMPT "Documentos x Pagar"
-ON SELECTION BAR 1 OF (a_menupops[4]) ;
-	DO _6ac0l4iyb ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
-ON SELECTION BAR 2 OF (a_menupops[4]) ;
-	DO _6ac0l4iyc ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+DEFINE BAR 1 OF (a_menupops[4]) PROMPT "Clientes"
+DEFINE BAR 2 OF (a_menupops[4]) PROMPT "Proveedores"
+DEFINE BAR 3 OF (a_menupops[4]) PROMPT "Cobros vs Deudas"
+DEFINE BAR 4 OF (a_menupops[4]) PROMPT "Deposito Cheques"
+ON BAR 1 OF (a_menupops[4]) ACTIVATE POPUP (a_menupops[5])
+ON BAR 2 OF (a_menupops[4]) ACTIVATE POPUP (a_menupops[6])
 ON SELECTION BAR 3 OF (a_menupops[4]) ;
-	DO _6ac0l4iyd ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051m ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+ON SELECTION BAR 4 OF (a_menupops[4]) ;
+	DO _70j18051n ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 
 DEFINE POPUP (a_menupops[5]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF (a_menupops[5]) PROMPT "Pagos Recibidos"
+DEFINE BAR 1 OF (a_menupops[5]) PROMPT "Pagos Emitidos"
 DEFINE BAR 2 OF (a_menupops[5]) PROMPT "Gestion de Cheques"
-DEFINE BAR 3 OF (a_menupops[5]) PROMPT "Documentos x Cobrar"
+DEFINE BAR 3 OF (a_menupops[5]) PROMPT "Documentos x Pagar"
 ON SELECTION BAR 1 OF (a_menupops[5]) ;
-	DO _6ac0l4iye ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051o ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 ON SELECTION BAR 2 OF (a_menupops[5]) ;
-	DO _6ac0l4iyf ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051p ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 ON SELECTION BAR 3 OF (a_menupops[5]) ;
-	DO _6ac0l4iyg ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051q ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 
 DEFINE POPUP (a_menupops[6]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF (a_menupops[6]) PROMPT "Revision Rendicion"
-DEFINE BAR 2 OF (a_menupops[6]) PROMPT "Reporte Cobranzas"
+DEFINE BAR 1 OF (a_menupops[6]) PROMPT "Pagos Recibidos"
+DEFINE BAR 2 OF (a_menupops[6]) PROMPT "Gestion de Cheques"
+DEFINE BAR 3 OF (a_menupops[6]) PROMPT "Documentos x Cobrar"
 ON SELECTION BAR 1 OF (a_menupops[6]) ;
-	DO _6ac0l4iyh ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051r ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 ON SELECTION BAR 2 OF (a_menupops[6]) ;
-	DO _6ac0l4iyi ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051s ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+ON SELECTION BAR 3 OF (a_menupops[6]) ;
+	DO _70j18051t ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 
 DEFINE POPUP (a_menupops[7]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF (a_menupops[7]) PROMPT "Tipo Produccion"
-DEFINE BAR 2 OF (a_menupops[7]) PROMPT "Unidades de Produccion"
-DEFINE BAR 3 OF (a_menupops[7]) PROMPT "Colores"
-DEFINE BAR 4 OF (a_menupops[7]) PROMPT "Tipo de Material"
-DEFINE BAR 5 OF (a_menupops[7]) PROMPT "Cobradores"
+DEFINE BAR 1 OF (a_menupops[7]) PROMPT "Revision Rendicion"
+DEFINE BAR 2 OF (a_menupops[7]) PROMPT "Reporte Cobranzas"
 ON SELECTION BAR 1 OF (a_menupops[7]) ;
-	DO _6ac0l4iyj ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051u ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 ON SELECTION BAR 2 OF (a_menupops[7]) ;
-	DO _6ac0l4iyk ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
-ON SELECTION BAR 3 OF (a_menupops[7]) ;
-	DO _6ac0l4iyl ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
-ON SELECTION BAR 4 OF (a_menupops[7]) ;
-	DO _6ac0l4iym ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
-ON SELECTION BAR 5 OF (a_menupops[7]) ;
-	DO _6ac0l4iyn ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051v ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 
 DEFINE POPUP (a_menupops[8]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF (a_menupops[8]) PROMPT "Verificacion Productos Registrados"
+DEFINE BAR 1 OF (a_menupops[8]) PROMPT "Tipo Produccion"
+DEFINE BAR 2 OF (a_menupops[8]) PROMPT "Unidades de Produccion"
+DEFINE BAR 3 OF (a_menupops[8]) PROMPT "Colores"
+DEFINE BAR 4 OF (a_menupops[8]) PROMPT "Tipo de Material"
+DEFINE BAR 5 OF (a_menupops[8]) PROMPT "Cobradores"
 ON SELECTION BAR 1 OF (a_menupops[8]) ;
-	DO _6ac0l4iyo ;
-	IN LOCFILE("REPORTES_CONSULTAS(PCV)\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+	DO _70j18051w ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+ON SELECTION BAR 2 OF (a_menupops[8]) ;
+	DO _70j18051x ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+ON SELECTION BAR 3 OF (a_menupops[8]) ;
+	DO _70j18051y ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+ON SELECTION BAR 4 OF (a_menupops[8]) ;
+	DO _70j18051z ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+ON SELECTION BAR 5 OF (a_menupops[8]) ;
+	DO _70j180520 ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
+
+DEFINE POPUP (a_menupops[9]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
+DEFINE BAR 1 OF (a_menupops[9]) PROMPT "Verificacion Productos Registrados"
+ON SELECTION BAR 1 OF (a_menupops[9]) ;
+	DO _70j180521 ;
+	IN LOCFILE("REPORTES_PRODUCCION\MENU\MENUPRINCIPAL" ,"MPX;MPR|FXP;PRG" ,"WHERE is MENUPRINCIPAL?")
 
 ON SELECTION POPUP ALL Wait Window "Esto es MenuOption"
 ACTIVATE MENU (m.cMenuName) NOWAIT
@@ -280,7 +298,7 @@ ENDIF
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IY1  ON SELECTION BAR 1 OF POPUP produccion      
+*       * _70J18051B  ON SELECTION BAR 1 OF POPUP produccion      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
@@ -291,16 +309,16 @@ ENDIF
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iy1
+PROCEDURE _70j18051b
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wformularioingresoproduccion.scx
+DO FORM .\form\wformularioingresoproduccion.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IY2  ON SELECTION BAR 2 OF POPUP produccion      
+*       * _70J18051C  ON SELECTION BAR 2 OF POPUP produccion      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
@@ -311,16 +329,16 @@ _MenuPrincipalOcupado=.f.
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iy2
+PROCEDURE _70j18051c
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wformularioingresoproduccion.scx
+DO FORM .\form\wformularioingresoproduccion.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IY3  ON SELECTION BAR 3 OF POPUP produccion      
+*       * _70J18051D  ON SELECTION BAR 3 OF POPUP produccion      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
@@ -331,16 +349,16 @@ _MenuPrincipalOcupado=.f.
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iy3
+PROCEDURE _70j18051d
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wEdicionIngresoProduccion.scx
+DO FORM .\form\wEdicionIngresoProduccion.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IY4  ON SELECTION BAR 4 OF POPUP produccion      
+*       * _70J18051E  ON SELECTION BAR 4 OF POPUP produccion      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
@@ -351,16 +369,16 @@ _MenuPrincipalOcupado=.f.
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iy4
+PROCEDURE _70j18051e
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM C:\Reportes_Consultas(pcv)\Form\wConsultaProduccion.scx
+DO FORM .\Form\wConsultaProduccion.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IY5  ON SELECTION BAR 5 OF POPUP produccion      
+*       * _70J18051F  ON SELECTION BAR 5 OF POPUP produccion      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
@@ -371,16 +389,16 @@ _MenuPrincipalOcupado=.f.
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iy5
+PROCEDURE _70j18051f
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM C:\Reportes_Consultas(pcv)\Form\wResumenProduccion.scx
+DO FORM .\Form\wResumenProduccion.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IY6  ON SELECTION BAR 6 OF POPUP produccion      
+*       * _70J18051G  ON SELECTION BAR 6 OF POPUP produccion      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
@@ -391,16 +409,16 @@ _MenuPrincipalOcupado=.f.
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iy6
+PROCEDURE _70j18051g
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wparametros_consultasalidas.scx
+DO FORM .\form\wparametros_consultasalidas.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IY7  ON SELECTION BAR 7 OF POPUP produccion      
+*       * _70J18051H  ON SELECTION BAR 7 OF POPUP produccion      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
@@ -411,207 +429,264 @@ _MenuPrincipalOcupado=.f.
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iy7
+PROCEDURE _70j18051h
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO Form C:\Reportes_Consultas(pcv)\Form\wInventarioGeneral-2.SCX
+DO Form .\Form\wInventarioGeneral-2.SCX
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IY8  ON SELECTION BAR 1 OF POPUP _5au0ktcmx      
+*       * _70J18051I  ON SELECTION BAR 8 OF POPUP produccion      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   14  
-*       * Called By:  ON SELECTION BAR 1 OF POPUP _5au0ktcmx      
-*       * Prompt:     Generacion de OT                            
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   12  
+*       * Called By:  ON SELECTION BAR 8 OF POPUP produccion      
+*       * Prompt:     Series y Lotes                              
 *       * Snippet:    8                                           
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iy8
+PROCEDURE _70j18051i
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wGeneracionOT.scx
+DO Form .\Form\wParamConsultaSeriesLotes.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IY9  ON SELECTION BAR 2 OF POPUP _5au0ktcmx      
+*       * _70J18051J  ON SELECTION BAR 1 OF POPUP lotes           
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
 *       * From Menu:  MENUPRINCIPAL.MPR,            Record:   15  
-*       * Called By:  ON SELECTION BAR 2 OF POPUP _5au0ktcmx      
-*       * Prompt:     Reporte de OT's Generadas                   
+*       * Called By:  ON SELECTION BAR 1 OF POPUP lotes           
+*       * Prompt:     Salidas x Lotes                             
 *       * Snippet:    9                                           
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iy9
-DO SalirPantallaPrincipal
-_MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wparametros_consultaot.scx
-_MenuPrincipalOcupado=.f.
+PROCEDURE _70j18051j
+DO FORM .\Form\wSalidasxLotes
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYA  ON SELECTION BAR 3 OF POPUP cuentascor      
+*       * _70J18051K  ON SELECTION BAR 1 OF POPUP _5au0ktcmx      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   28  
-*       * Called By:  ON SELECTION BAR 3 OF POPUP cuentascor      
-*       * Prompt:     Cobros vs Deudas                            
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   18  
+*       * Called By:  ON SELECTION BAR 1 OF POPUP _5au0ktcmx      
+*       * Prompt:     Generacion de OT                            
 *       * Snippet:    10                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iya
+PROCEDURE _70j18051k
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wCobros-Deudas.scx
+DO FORM .\form\wGeneracionOT.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYB  ON SELECTION BAR 1 OF POPUP newitem         
+*       * _70J18051L  ON SELECTION BAR 2 OF POPUP _5au0ktcmx      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   20  
-*       * Called By:  ON SELECTION BAR 1 OF POPUP newitem         
-*       * Prompt:     Pagos Emitidos                              
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   19  
+*       * Called By:  ON SELECTION BAR 2 OF POPUP _5au0ktcmx      
+*       * Prompt:     Reporte de OT's Generadas                   
 *       * Snippet:    11                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iyb
+PROCEDURE _70j18051l
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wParametros_PagosRecibidos.scx
+DO FORM .\form\wparametros_consultaot.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYC  ON SELECTION BAR 2 OF POPUP newitem         
+*       * _70J18051M  ON SELECTION BAR 3 OF POPUP cuentascor      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   21  
-*       * Called By:  ON SELECTION BAR 2 OF POPUP newitem         
-*       * Prompt:     Gestion de Cheques                          
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   32  
+*       * Called By:  ON SELECTION BAR 3 OF POPUP cuentascor      
+*       * Prompt:     Cobros vs Deudas                            
 *       * Snippet:    12                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iyc
+PROCEDURE _70j18051m
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wParametros_GestionCheques_Clientes.scx
+DO FORM .\form\wCobros-Deudas.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYD  ON SELECTION BAR 3 OF POPUP newitem         
+*       * _70J18051N  ON SELECTION BAR 4 OF POPUP cuentascor      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   22  
-*       * Called By:  ON SELECTION BAR 3 OF POPUP newitem         
-*       * Prompt:     Documentos x Pagar                          
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   33  
+*       * Called By:  ON SELECTION BAR 4 OF POPUP cuentascor      
+*       * Prompt:     Deposito Cheques                            
 *       * Snippet:    13                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iyd
+PROCEDURE _70j18051n
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wParametros_DocxCobrar.scx
+DO FORM .\form\wDepositoCheques.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYE  ON SELECTION BAR 1 OF POPUP proveedore      
+*       * _70J18051O  ON SELECTION BAR 1 OF POPUP newitem         
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   25  
-*       * Called By:  ON SELECTION BAR 1 OF POPUP proveedore      
-*       * Prompt:     Pagos Recibidos                             
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   24  
+*       * Called By:  ON SELECTION BAR 1 OF POPUP newitem         
+*       * Prompt:     Pagos Emitidos                              
 *       * Snippet:    14                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iye
+PROCEDURE _70j18051o
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wParametros_PagosEmitidos.scx
+DO FORM .\form\wParametros_PagosRecibidos.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYF  ON SELECTION BAR 2 OF POPUP proveedore      
+*       * _70J18051P  ON SELECTION BAR 2 OF POPUP newitem         
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   26  
-*       * Called By:  ON SELECTION BAR 2 OF POPUP proveedore      
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   25  
+*       * Called By:  ON SELECTION BAR 2 OF POPUP newitem         
 *       * Prompt:     Gestion de Cheques                          
 *       * Snippet:    15                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iyf
+PROCEDURE _70j18051p
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wParametros_GestionCheques.scx
+DO FORM .\form\wParametros_GestionCheques_Clientes.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYG  ON SELECTION BAR 3 OF POPUP proveedore      
+*       * _70J18051Q  ON SELECTION BAR 3 OF POPUP newitem         
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   27  
-*       * Called By:  ON SELECTION BAR 3 OF POPUP proveedore      
-*       * Prompt:     Documentos x Cobrar                         
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   26  
+*       * Called By:  ON SELECTION BAR 3 OF POPUP newitem         
+*       * Prompt:     Documentos x Pagar                          
 *       * Snippet:    16                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iyg
+PROCEDURE _70j18051q
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wParametros_DocxPagar.scx
+DO FORM .\form\wParametros_DocxCobrar.scx
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYH  ON SELECTION BAR 1 OF POPUP cobranzas       
+*       * _70J18051R  ON SELECTION BAR 1 OF POPUP proveedore      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   31  
-*       * Called By:  ON SELECTION BAR 1 OF POPUP cobranzas       
-*       * Prompt:     Revision Rendicion                          
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   29  
+*       * Called By:  ON SELECTION BAR 1 OF POPUP proveedore      
+*       * Prompt:     Pagos Recibidos                             
 *       * Snippet:    17                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iyh
+PROCEDURE _70j18051r
+DO SalirPantallaPrincipal
+_MenuPrincipalOcupado=.t.
+DO FORM .\form\wParametros_PagosEmitidos.scx
+_MenuPrincipalOcupado=.f.
+
+
+*       *********************************************************
+*       *                                                         
+*       * _70J18051S  ON SELECTION BAR 2 OF POPUP proveedore      
+*       *                                                         
+*       * Procedure Origin:                                       
+*       *                                                         
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   30  
+*       * Called By:  ON SELECTION BAR 2 OF POPUP proveedore      
+*       * Prompt:     Gestion de Cheques                          
+*       * Snippet:    18                                          
+*       *                                                         
+*       *********************************************************
+*
+PROCEDURE _70j18051s
+DO SalirPantallaPrincipal
+_MenuPrincipalOcupado=.t.
+DO FORM .\form\wParametros_GestionCheques.scx
+_MenuPrincipalOcupado=.f.
+
+
+*       *********************************************************
+*       *                                                         
+*       * _70J18051T  ON SELECTION BAR 3 OF POPUP proveedore      
+*       *                                                         
+*       * Procedure Origin:                                       
+*       *                                                         
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   31  
+*       * Called By:  ON SELECTION BAR 3 OF POPUP proveedore      
+*       * Prompt:     Documentos x Cobrar                         
+*       * Snippet:    19                                          
+*       *                                                         
+*       *********************************************************
+*
+PROCEDURE _70j18051t
+DO SalirPantallaPrincipal
+_MenuPrincipalOcupado=.t.
+DO FORM .\form\wParametros_DocxPagar.scx
+_MenuPrincipalOcupado=.f.
+
+
+*       *********************************************************
+*       *                                                         
+*       * _70J18051U  ON SELECTION BAR 1 OF POPUP cobranzas       
+*       *                                                         
+*       * Procedure Origin:                                       
+*       *                                                         
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   36  
+*       * Called By:  ON SELECTION BAR 1 OF POPUP cobranzas       
+*       * Prompt:     Revision Rendicion                          
+*       * Snippet:    20                                          
+*       *                                                         
+*       *********************************************************
+*
+PROCEDURE _70j18051u
 
 LOCAL oWSH
 *WAIT WINDOW "Creando Objeto"
@@ -627,18 +702,18 @@ oWSH.Run(FULLPATH(_Archivo) + " 1",,0)
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYI  ON SELECTION BAR 2 OF POPUP cobranzas       
+*       * _70J18051V  ON SELECTION BAR 2 OF POPUP cobranzas       
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   32  
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   37  
 *       * Called By:  ON SELECTION BAR 2 OF POPUP cobranzas       
 *       * Prompt:     Reporte Cobranzas                           
-*       * Snippet:    18                                          
+*       * Snippet:    21                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iyi
+PROCEDURE _70j18051v
 
 LOCAL oWSH
 oWSH = CREATEOBJECT("WScript.Shell")
@@ -651,98 +726,98 @@ oWSH.Run(FULLPATH(_Archivo) + " 3",,0)
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYJ  ON SELECTION BAR 1 OF POPUP archivosma      
+*       * _70J18051W  ON SELECTION BAR 1 OF POPUP archivosma      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   35  
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   40  
 *       * Called By:  ON SELECTION BAR 1 OF POPUP archivosma      
 *       * Prompt:     Tipo Produccion                             
-*       * Snippet:    19                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _6ac0l4iyj
-DO SalirPantallaPrincipal
-_MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wMaestroTipoProduccion.SCX
-_MenuPrincipalOcupado=.f.
-
-
-*       *********************************************************
-*       *                                                         
-*       * _6AC0L4IYK  ON SELECTION BAR 2 OF POPUP archivosma      
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   36  
-*       * Called By:  ON SELECTION BAR 2 OF POPUP archivosma      
-*       * Prompt:     Unidades de Produccion                      
-*       * Snippet:    20                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _6ac0l4iyk
-DO SalirPantallaPrincipal
-_MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wMaestroUnidadProduccion.SCX
-_MenuPrincipalOcupado=.f.
-
-
-*       *********************************************************
-*       *                                                         
-*       * _6AC0L4IYL  ON SELECTION BAR 3 OF POPUP archivosma      
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   37  
-*       * Called By:  ON SELECTION BAR 3 OF POPUP archivosma      
-*       * Prompt:     Colores                                     
-*       * Snippet:    21                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _6ac0l4iyl
-DO SalirPantallaPrincipal
-_MenuPrincipalOcupado=.t.
-DO FORM C:\Reportes_Consultas(pcv)\Form\wMaestroColores.scx
-_MenuPrincipalOcupado=.f.
-
-
-*       *********************************************************
-*       *                                                         
-*       * _6AC0L4IYM  ON SELECTION BAR 4 OF POPUP archivosma      
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   38  
-*       * Called By:  ON SELECTION BAR 4 OF POPUP archivosma      
-*       * Prompt:     Tipo de Material                            
 *       * Snippet:    22                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iym
+PROCEDURE _70j18051w
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM C:\Reportes_Consultas(pcv)\Form\wMaestroMateriales.scx
+DO FORM .\form\wMaestroTipoProduccion.SCX
 _MenuPrincipalOcupado=.f.
 
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYN  ON SELECTION BAR 5 OF POPUP archivosma      
+*       * _70J18051X  ON SELECTION BAR 2 OF POPUP archivosma      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   39  
-*       * Called By:  ON SELECTION BAR 5 OF POPUP archivosma      
-*       * Prompt:     Cobradores                                  
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   41  
+*       * Called By:  ON SELECTION BAR 2 OF POPUP archivosma      
+*       * Prompt:     Unidades de Produccion                      
 *       * Snippet:    23                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iyn
+PROCEDURE _70j18051x
+DO SalirPantallaPrincipal
+_MenuPrincipalOcupado=.t.
+DO FORM .\form\wMaestroUnidadProduccion.SCX
+_MenuPrincipalOcupado=.f.
+
+
+*       *********************************************************
+*       *                                                         
+*       * _70J18051Y  ON SELECTION BAR 3 OF POPUP archivosma      
+*       *                                                         
+*       * Procedure Origin:                                       
+*       *                                                         
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   42  
+*       * Called By:  ON SELECTION BAR 3 OF POPUP archivosma      
+*       * Prompt:     Colores                                     
+*       * Snippet:    24                                          
+*       *                                                         
+*       *********************************************************
+*
+PROCEDURE _70j18051y
+DO SalirPantallaPrincipal
+_MenuPrincipalOcupado=.t.
+DO FORM .\Form\wMaestroColores.scx
+_MenuPrincipalOcupado=.f.
+
+
+*       *********************************************************
+*       *                                                         
+*       * _70J18051Z  ON SELECTION BAR 4 OF POPUP archivosma      
+*       *                                                         
+*       * Procedure Origin:                                       
+*       *                                                         
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   43  
+*       * Called By:  ON SELECTION BAR 4 OF POPUP archivosma      
+*       * Prompt:     Tipo de Material                            
+*       * Snippet:    25                                          
+*       *                                                         
+*       *********************************************************
+*
+PROCEDURE _70j18051z
+DO SalirPantallaPrincipal
+_MenuPrincipalOcupado=.t.
+DO FORM .\Form\wMaestroMateriales.scx
+_MenuPrincipalOcupado=.f.
+
+
+*       *********************************************************
+*       *                                                         
+*       * _70J180520  ON SELECTION BAR 5 OF POPUP archivosma      
+*       *                                                         
+*       * Procedure Origin:                                       
+*       *                                                         
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   44  
+*       * Called By:  ON SELECTION BAR 5 OF POPUP archivosma      
+*       * Prompt:     Cobradores                                  
+*       * Snippet:    26                                          
+*       *                                                         
+*       *********************************************************
+*
+PROCEDURE _70j180520
 
 LOCAL oWSH
 oWSH = CREATEOBJECT("WScript.Shell")
@@ -751,19 +826,19 @@ oWSH.Run(FULLPATH("Cobradores.exe") + " 2",,0)
 
 *       *********************************************************
 *       *                                                         
-*       * _6AC0L4IYO  ON SELECTION BAR 1 OF POPUP mantenimie      
+*       * _70J180521  ON SELECTION BAR 1 OF POPUP mantenimie      
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   42  
+*       * From Menu:  MENUPRINCIPAL.MPR,            Record:   47  
 *       * Called By:  ON SELECTION BAR 1 OF POPUP mantenimie      
 *       * Prompt:     Verificacion Productos Registrados          
-*       * Snippet:    24                                          
+*       * Snippet:    27                                          
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _6ac0l4iyo
+PROCEDURE _70j180521
 DO SalirPantallaPrincipal
 _MenuPrincipalOcupado=.t.
-DO FORM c:\reportes_consultas(pcv)\form\wParametros_VerificaProduccion.scx
+DO FORM .\form\wParametros_VerificaProduccion.scx
 _MenuPrincipalOcupado=.f.

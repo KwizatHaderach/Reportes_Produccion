@@ -1,0 +1,11 @@
+UPDATE DT122023 ;
+	SET Sale = NumSerie.Entraseri ;
+	FROM NumSerie  ;
+	WHERE Tipo = "PP" .and. ;
+		  VAL(Numero)= 46023 .and. ;
+		  Val(Observ) = Val(NumSerie.NumSeri)
+		  
+UPDATE NumSerie ;
+	SET SaleSeri = EntraSeri ;
+	WHERE TipDoc="PP" .and. ;
+		  VAL(NumDoc)=46023
